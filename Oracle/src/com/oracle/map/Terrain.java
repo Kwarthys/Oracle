@@ -52,7 +52,7 @@ public class Terrain {
 		System.out.println("Zones Created in " + (new Date().getTime() - startZones.getTime()) + "ms\n Merging Zones...");
 
 		Date startMerge = new Date();
-		while(allZones.size() > 10)
+		while(allZones.size() > 100)
 			mergeZones();
 
 		System.out.println("Zones merged in " + (new Date().getTime() - startMerge.getTime()) + "ms.");
@@ -141,23 +141,28 @@ public class Terrain {
 	
 	private void drawZones()
 	{
-		int stateID = 1;
+		int zoneID = 1;
 		for(int j = 0; j < height ; j++)
 		{
 			for (int i = 0; i < width; i++)
 			{
 				if(map1[j][i] == 1 && map2[j][i] == -1)
 				{
-					Zone newZone = new Zone(stateID++);
+					Zone newZone = new Zone(zoneID++);
 					allZones.add(newZone);
 					//System.out.println("new Zone " + stateID);
 					zoneBuilding(newZone, j, i);
-					computeBoundaries(newZone);
 				}
 				else if(map1[j][i] == 0)map2[j][i] = 0;
 			}
 		}
+		
 		applyMap();
+		
+		for(Zone z : allZones)
+		{
+			computeBoundaries(z);
+		}
 	}
 	
 	
@@ -199,7 +204,8 @@ public class Terrain {
 			
 			if(toVisit.size() == 0) return;
 			
-			int[] point = toVisit.remove(0);
+			
+			int[] point = toVisit.remove(Math.random() < 0.5 ? 0 : toVisit.size()-1);
 			j = point[0];
 			i = point[1];
 		}

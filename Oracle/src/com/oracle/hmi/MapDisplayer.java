@@ -43,6 +43,7 @@ public class MapDisplayer extends JPanel{
 					g.setColor(new Color((int)(Math.pow(map[j][i],8)%255), (int)(Math.pow(map[j][i],6)%255) ,(int)(Math.pow(map[j][i],7)%255)));
 				}
 				
+				
 				g.fillRect(i, j, 1,1);
 				
 				//g.setColor(Color.WHITE);
