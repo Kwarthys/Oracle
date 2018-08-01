@@ -11,6 +11,8 @@ public class Terrain {
 	int map2[][], map1[][], width, height;
 	
 	private double seed;
+	
+	private final int ZONE_SIZE_INIT = 500;
 
 	private ArrayList<Zone> allZones = new ArrayList<>();
 	public ArrayList<Zone> getAllZones(){return allZones;}
@@ -50,7 +52,7 @@ public class Terrain {
 		System.out.println("Zones Created in " + (new Date().getTime() - startZones.getTime()) + "ms\n Merging Zones...");
 
 		Date startMerge = new Date();
-		while(allZones.size() > 45)
+		while(allZones.size() > 10)
 			mergeZones();
 
 		System.out.println("Zones merged in " + (new Date().getTime() - startMerge.getTime()) + "ms.");
@@ -106,7 +108,7 @@ public class Terrain {
 		}
 	}
 	
-	private ArrayList<int[]> Voisins(int j, int i, int comparator)
+	private ArrayList<int[]> getVoisins(int j, int i, int comparator)
 	{
 		ArrayList<int[]> leReturn = new ArrayList<int[]>();
 		
@@ -146,9 +148,11 @@ public class Terrain {
 			{
 				if(map1[j][i] == 1 && map2[j][i] == -1)
 				{
-					allZones.add(new Zone(stateID++));
+					Zone newZone = new Zone(stateID++);
+					allZones.add(newZone);
 					//System.out.println("new Zone " + stateID);
-					stateBuilding(allZones.get(allZones.size()-1), j, i);
+					zoneBuilding(newZone, j, i);
+					computeBoundaries(newZone);
 				}
 				else if(map1[j][i] == 0)map2[j][i] = 0;
 			}
@@ -156,38 +160,50 @@ public class Terrain {
 		applyMap();
 	}
 	
-	private void stateBuilding(Zone s,int j, int i)
-	{
-		map2[j][i] = s.addToZone(j,i);
-		//System.out.println("Zone ID : " + s.ID());
-		if(s.getLands().size() > 1000)return;
+	
+	private void zoneBuilding(Zone toBuild, int firstj, int firsti)
+	{		
+		int j = firstj;
+		int i = firsti;
 		
-		boolean isFrontier = false;
+		ArrayList<int[]> toVisit = new ArrayList<>();		
 		
-		ArrayList<int[]> voisins = Voisins(j,i,1);
-		if(voisins.size() < 4)isFrontier = true;
-		while(voisins.size()>0)
+		while(toBuild.size() < ZONE_SIZE_INIT)
 		{
-			int[] c = voisins.remove((int)(Math.random()*voisins.size()));
-			//System.out.println(c[0] + " " + c[1]);
-			if(map1[c[0]][c[1]] == 1) // if terrain is land
+			ArrayList<int[]> voisins = getVoisins(j,i,1);
+			
+			map2[j][i] = toBuild.addToZone(j, i);
+			
+			while(voisins.size()>0)
 			{
-				if(map2[c[0]][c[1]] == -1) // if land has not yet been stated
+				int[] v = voisins.remove((int)(Math.random()*voisins.size()));
+				
+				if(map1[v[0]][v[1]] == 1) // if terrain is land
 				{
-					//System.out.println("Coming from : " + j + "|" + i + " to " + c[0] + "|" + c[1]);
-					stateBuilding(s, c[0],c[1]);
-				}
-				else if(map2[c[0]][c[1]] != s.getID()) // if land is another state
-				{
-					isFrontier = true;
+					if(map2[v[0]][v[1]] == -1) // if land has not yet been stated
+					{
+						if(toVisit.size() < ZONE_SIZE_INIT)
+						{
+							boolean gotIt = false;
+							for(int vi = 0; vi < toVisit.size() && !gotIt; vi++)
+							{
+								if(v[0] == toVisit.get(vi)[0] && v[1] == toVisit.get(vi)[1])
+									gotIt = true;
+							}
+							if(!gotIt)
+								toVisit.add(v);
+						}
+					}
 				}
 			}
-
+			
+			if(toVisit.size() == 0) return;
+			
+			int[] point = toVisit.remove(0);
+			j = point[0];
+			i = point[1];
 		}
-		
-		if(isFrontier)
-			s.addToBoundaries(j, i);
-	}
+	}	
 	
 	private void mergeZones()
 	{
@@ -203,6 +219,7 @@ public class Terrain {
 		}
 		
 		Zone smallerZone = allZones.get(smallerIndex);
+		smallerZone.resetNeighbours();
 		
 		for(Zone s : allZones)
 		{
@@ -210,7 +227,7 @@ public class Terrain {
 			{
 				for(int[] bSmaller : smallerZone.getBoundaries())
 				{
-					if(Voisins(bSmaller[0],bSmaller[1], s.getID()).size() != 0)
+					if(getVoisins(bSmaller[0],bSmaller[1], s.getID()).size() != 0)
 					{
 						smallerZone.addNeighbour(s);
 					}
@@ -223,60 +240,71 @@ public class Terrain {
 			return;
 		}
 		Zone otherZone;
-		if(allZones.size()>2000)
+		if(Math.random() < -2)
 		{
-			smallerIndex = 0;
-			smallerSize = smallerZone.getNeighbours().get(0).size();
-			for(int i = 0; i < smallerZone.getNeighbours().size(); i++)
-			{
-				if(smallerSize > smallerZone.getNeighbours().get(i).size());
-				{
-					smallerSize = smallerZone.getNeighbours().get(i).size();
-					smallerIndex = i;
-				}
-			}
-			
-			otherZone = smallerZone.getNeighbours().get(smallerIndex);
+			otherZone = mergeZonesSize(smallerZone);
 		}
 		else
 		{
-			ArrayList<Integer> count = new ArrayList<>(); 
-			for(int i = 0; i < smallerZone.getNeighbours().size(); i++)
-			{
-				count.add(i,0);
-				for(int[] c : smallerZone.getBoundaries())
-				{
-					if(Voisins(c[0], c[1], smallerZone.getNeighbours().get(i).getID()).size() != 0)
-					{
-						count.set(i,count.get(i)+1);
-					}
-				}
-			}
-			smallerIndex = 0;
-			int biggerBoundaries = count.get(0);
-			for(int i = 0; i < count.size(); i++)
-			{
-				if(biggerBoundaries < count.get(i))
-				{
-					smallerIndex = i;
-					biggerBoundaries = count.get(i);
-				}
-			}
-			
-			otherZone = smallerZone.getNeighbours().get(smallerIndex);
+			otherZone = mergeZonesBoundaries(smallerZone);
 		}
 		
-		stateFusion(smallerZone,otherZone);
+		zoneFusion(smallerZone,otherZone);
 		
 	}
 	
+	private Zone mergeZonesSize(Zone smallerZone)
+	{
+		int smallerIndex = 0;
+		int smallerSize = smallerZone.getNeighbours().get(0).size();
+		for(int i = 0; i < smallerZone.getNeighbours().size(); i++)
+		{
+			if(smallerSize > smallerZone.getNeighbours().get(i).size());
+			{
+				smallerSize = smallerZone.getNeighbours().get(i).size();
+				smallerIndex = i;
+			}
+		}
+		
+		return smallerZone.getNeighbours().get(smallerIndex);
+	}
+	
+	private Zone mergeZonesBoundaries(Zone smallerZone)
+	{
+		ArrayList<Integer> count = new ArrayList<>(); 
+		for(int i = 0; i < smallerZone.getNeighbours().size(); i++)
+		{
+			count.add(i,0);
+			for(int[] c : smallerZone.getBoundaries())
+			{
+				if(getVoisins(c[0], c[1], smallerZone.getNeighbours().get(i).getID()).size() != 0)
+				{
+					count.set(i,count.get(i)+1);
+				}
+			}
+		}
+		int smallerIndex = 0;
+		int biggerBoundaries = 0;
+		for(int i = 0; i < count.size(); i++)
+		{
+			if(biggerBoundaries < count.get(i))
+			{
+				smallerIndex = i;
+				biggerBoundaries = count.get(i);
+			}
+		}
+		
+		return smallerZone.getNeighbours().get(smallerIndex);
+	}
+	
+		
 	private void smallIslandMerge(Zone s)
 	{
 		double smallerDistance = Float.POSITIVE_INFINITY;
-		Zone closestZone = s;
+		Zone closestZone = null;
 		for(Zone n : allZones)
 		{
-			if(s!=n)
+			if(n!=s)
 			{
 				for(int[] p1 : s.getBoundaries())
 				{
@@ -284,7 +312,7 @@ public class Terrain {
 					{
 						if(Distance(p1,p2) < smallerDistance)
 						{
-							if(n!=closestZone)closestZone = n;
+							closestZone = n;
 							smallerDistance = Distance(p1,p2);
 						}
 					}
@@ -292,10 +320,10 @@ public class Terrain {
 			}
 		}
 		
-		stateFusion(s, closestZone);
+		zoneFusion(s, closestZone);
 	}
 	
-	private void stateFusion(Zone s1, Zone s2)
+	private void zoneFusion(Zone s1, Zone s2)
 	{
 		Zone biggerIDZone, lowerIDZone;
 		if(s1.getID()>s2.getID())
@@ -310,12 +338,21 @@ public class Terrain {
 		}
 	
 		allZones.remove(biggerIDZone);
+		
+		for(int i = 0; i < biggerIDZone.getLands().size(); i++)
+		{
+			int[] c = biggerIDZone.getLands().get(i);
+			map1[c[0]][c[1]] = lowerIDZone.getID();
+			lowerIDZone.addToZone(c[0],c[1]);
+		}
 
+		/*
 		for(int[] c : biggerIDZone.getLands())
 		{
 			map1[c[0]][c[1]] = lowerIDZone.getID();
 			lowerIDZone.addToZone(c[0],c[1]);
 		}
+		*/
 		
 		computeBoundaries(lowerIDZone);
 		
@@ -326,7 +363,7 @@ public class Terrain {
 		s.resetBoundaries();
 		for(int[] c : s.getLands())
 		{
-			if(Voisins(c[0], c[1], s.getID()).size() < 4 )
+			if(getVoisins(c[0], c[1], s.getID()).size() < 4 )
 			{
 				s.addToBoundaries(c);
 			}

@@ -40,7 +40,7 @@ public class MapDisplayer extends JPanel{
 				else if(map[j][i] == 0)g.setColor(new Color(0x6F,0x91,0xD1));//Seas
 				else 
 				{
-					g.setColor(new Color(150+(int)(Math.pow(map[j][i],8)%105), (int)(Math.pow(map[j][i],6)%156) ,10+(int)(Math.pow(map[j][i],7)%150)));
+					g.setColor(new Color((int)(Math.pow(map[j][i],8)%255), (int)(Math.pow(map[j][i],6)%255) ,(int)(Math.pow(map[j][i],7)%255)));
 				}
 				
 				g.fillRect(i, j, 1,1);

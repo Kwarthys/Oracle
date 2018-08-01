@@ -6,18 +6,18 @@ public class Zone {
 	
 	private ArrayList<int[]> lands = new ArrayList<>();
 	private ArrayList<int[]> boundaries = new ArrayList<>();
-	private ArrayList<Zone> neighbours = new ArrayList<>();
+	public ArrayList<Zone> neighbours = new ArrayList<>();
 	
-	private int stateID;
+	private int zoneID;
 	
 	public Zone(int id)
 	{
-		stateID = id;
+		zoneID = id;
 	}
 	
 	public int getID()
 	{
-		return stateID;
+		return zoneID;
 	}
 
 	public ArrayList<int[]> getLands() {
@@ -40,24 +40,27 @@ public class Zone {
 		this.lands = lands;
 	}
 	
+	/**
+	 * @return zoneID
+	 */
 	public int addToZone(int j, int i)
 	{
 		int[] tmp = {j,i};
 		lands.add(tmp);
-		return stateID;
+		return zoneID;
 	}
 	
 	public int addToBoundaries(int j, int i)//Returns the state ID 
 	{
 		int[] tmp = {j,i};
 		boundaries.add(tmp);
-		return stateID;
+		return zoneID;
 	}
 	
 	public int addToBoundaries(int[] c)//Returns the state ID 
 	{
 		boundaries.add(c);
-		return stateID;
+		return zoneID;
 	}
 	
 	public void resetBoundaries() 
@@ -68,6 +71,11 @@ public class Zone {
 	public void addNeighbour(Zone s)
 	{
 		neighbours.add(s);
+	}
+
+	public void resetNeighbours()
+	{
+		neighbours = new ArrayList<>();
 	}
 
 }
