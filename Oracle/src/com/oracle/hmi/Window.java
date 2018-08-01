@@ -32,6 +32,7 @@ public class Window extends JFrame
 		//sim.start(this);
 	}
 		
+	/*
 	private void go()
 	{
 		boolean go = true;
@@ -48,4 +49,5 @@ public class Window extends JFrame
 			go = false;
 		}
 	}
+	*/
 }

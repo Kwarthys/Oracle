@@ -3,6 +3,7 @@ package com.oracle.map;
 import java.util.ArrayList;
 import java.util.Date;
 
+import com.oracle.map.model.Manager;
 import com.oracle.map.model.Zone;
 import com.oracle.map.utils.ImprovedNoise;
 
@@ -47,13 +48,18 @@ public class Terrain {
 		System.out.println("Generated in " + (new Date().getTime() - startTime.getTime()) + "ms\nCreating Zones...");
 		
 		Date startZones = new Date();
-		drawZones();
+		drawZones();		
+		System.out.println("Cleaning too small zones ....");		
+		cleanSmallZones();
+		
+		Manager.createPlaces(allZones);
+
 
 		System.out.println("Zones Created in " + (new Date().getTime() - startZones.getTime()) + "ms\n Merging Zones...");
 
 		Date startMerge = new Date();
-		while(allZones.size() > 100)
-			mergeZones();
+		//while(allZones.size() > 100)
+			//mergeZones();
 
 		System.out.println("Zones merged in " + (new Date().getTime() - startMerge.getTime()) + "ms.");
 		System.out.println("OverAll generation in " + (new Date().getTime() - startTime.getTime()) + "ms.");
@@ -202,14 +208,31 @@ public class Terrain {
 				}
 			}
 			
-			if(toVisit.size() == 0) return;
-			
+			if(toVisit.size() == 0) return;			
 			
 			int[] point = toVisit.remove(Math.random() < 0.5 ? 0 : toVisit.size()-1);
 			j = point[0];
 			i = point[1];
 		}
-	}	
+	}
+	
+	
+	private void cleanSmallZones()
+	{
+		boolean found;
+		do
+		{
+			found = false;
+			for(int i = 0; i < allZones.size() && !found; i++)
+			{
+				if(allZones.get(i).size() < ZONE_SIZE_INIT)
+				{
+					found = true;
+				}
+			}
+			if(found) mergeZones();
+		}while(found);
+	}
 	
 	private void mergeZones()
 	{
