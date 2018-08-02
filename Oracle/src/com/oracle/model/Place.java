@@ -6,10 +6,13 @@ public class Place {
 
 	public ArrayList<int[]> lands = new ArrayList<>();
 	public ArrayList<int[]> boundaries = new ArrayList<>();
+	public ArrayList<Place> neighbours = new ArrayList<>();
 	
 	public double landValue;
 	
 	public String name;
+	
+	public int owner;
 	
 	public Place()
 	{

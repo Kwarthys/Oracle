@@ -1,7 +1,7 @@
 package com.oracle.model;
 
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.HashMap;
 
 import com.oracle.hmi.MapDisplayer;
 import com.oracle.hmi.Window;
@@ -10,18 +10,17 @@ import com.oracle.utils.generators.NameGenerator;
 
 public class Manager {
 	
-	public ArrayList<Place> places;
-	public ArrayList<Nation> nations;
+	public ArrayList<Place> places = new ArrayList<>();
+	public ArrayList<Nation> nations = new ArrayList<>();
 	
 	public Manager()
 	{
-		Terrain terrainGenerator = new Terrain(1000,1000, Math.random()*10);
-		int[][] map = terrainGenerator.generateMap();
+		Terrain terrainManager = new Terrain(1000,1000, Math.random()*10);
+		int[][] map = terrainManager.generateMap();
 		
-		createPlaces(terrainGenerator.getAtomicPlaces());
-		createNations(terrainGenerator.getAllZones());
+		createNations(terrainManager.getAllZones(), terrainManager.getNationsOfPlaces());
 		
-		MapDisplayer display = new MapDisplayer(map, terrainGenerator.getAtomicPlaces());
+		MapDisplayer display = new MapDisplayer(map, terrainManager.getAtomicPlaces());
 		//Window w = 
 		new Window(display);
 		
@@ -37,46 +36,74 @@ public class Manager {
 	
 	private void drawWarEvent()
 	{
+		/*
 		Random generator = new Random();
 		int nationIndexOne = generator.nextInt(nations.size());
 		Nation protagonist = nations.get(nationIndexOne);
-		
-		int voisinID = protagonist.getLands().getNeighbours().get(generator.nextInt(protagonist.getLands().getNeighbours().size())).getID();
-		
-		Nation otherNation = findNationByID(voisinID);
+		*/
+		System.out.println(findNationByID(1).getNeighbours().size());
 	}
 	
 	
-	private Nation findNationByID(int id)
+	public Nation findNationByID(int id)
 	{
 		for(Nation n : nations)
 		{
 			if(n.getID() == id)
 				return n;
-		}
-		
+		}		
 		return null;
 	}
 
 
-	private void createNations(ArrayList<Zone> zones)
+	private void createNations(ArrayList<Zone> zones, HashMap<Integer, ArrayList<Zone>> placesOfZones)
 	{
 		nations = new ArrayList<>();
 		
 		for(Zone z : zones)
 		{
-			nations.add(new Nation(z, new ArrayList<Actor>(), NameGenerator.getRandomName()));
+			Nation n = new Nation(new ArrayList<Actor>(), NameGenerator.getRandomName(), z.getID());
+			n.setPlaces(createPlaces(placesOfZones.get(z.getID()), z.getID()));
+			nations.add(n);
+		}
+		
+		for(Nation n : nations)
+		{
+			ArrayList<Nation> voisins = new ArrayList<>();
+			ArrayList<Zone> voisinsZones = null;
+			boolean found = false;
+			for(int i = 0; i < zones.size() && !found; i++)
+			{
+				Zone current = zones.get(i);
+				if(current.getID() == n.getID())
+				{
+					found = true;
+					voisinsZones = new ArrayList<>(current.getNeighbours());
+				}
+			}
+			
+			for(Zone z : voisinsZones)
+			{
+				voisins.add(findNationByID(z.getID()));
+			}
+			
+			n.setNeighbours(voisins);
 		}
 	}
 
-	public void createPlaces(ArrayList<Zone> zones)
+	public ArrayList<Place> createPlaces(ArrayList<Zone> zones, int ownerId)
 	{
-		places = new ArrayList<>();
+		ArrayList<Place> places = new ArrayList<>();
 		
 		for(Zone z : zones)
 		{
-			places.add(new Place(z.getLands(), z.getBoundaries(), 0.5, NameGenerator.getRandomName()));
+			Place daPlace = new Place(z.getLands(), z.getBoundaries(), 0.5, NameGenerator.getRandomName());
+			daPlace.owner = ownerId;
+			places.add(daPlace);
+			this.places.add(daPlace);
 		}
+		
+		return places;
 	}
 
 }

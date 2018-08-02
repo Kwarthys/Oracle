@@ -4,26 +4,39 @@ import java.util.ArrayList;
 
 public class Nation
 {
-	private Zone lands;
 	private ArrayList<Actor> actors;
+	
+	private ArrayList<Place> places;
+	
+	private ArrayList<Nation> neighbours;
 	
 	public String name;
 	
 	private int id;
 	
-	public Nation(Zone land, ArrayList<Actor> actors, String name)
+	public Nation(ArrayList<Actor> actors, String name, int id)
 	{
-		this.lands = new Zone(land);
 		this.actors = new ArrayList<>(actors);
 		
-		id = this.lands.getID();
+		this.id = id;
 		
 		this.name = name;
 	}
 	
 	
 	/*** GETTERS SETTERS ***/
-	public Zone getLands() {return lands;}
 	public ArrayList<Actor> getActors() {return actors;}
 	public int getID() {return id;}
+	public ArrayList<Place> getPlaces(){return places;}
+	public ArrayList<Nation> getNeighbours(){return neighbours;}
+	
+	public void setPlaces(ArrayList<Place> places)
+	{
+		this.places = new ArrayList<>(places);
+	}
+	
+	public void setNeighbours(ArrayList<Nation> neighbours)
+	{
+		this.neighbours = new ArrayList<>(neighbours);
+	}
 }

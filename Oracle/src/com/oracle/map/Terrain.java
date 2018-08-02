@@ -2,6 +2,7 @@ package com.oracle.map;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 import com.oracle.map.utils.ImprovedNoise;
 import com.oracle.model.Zone;
@@ -21,6 +22,8 @@ public class Terrain {
 	
 	private ArrayList<Zone> noVoisins = new ArrayList<>();
 	public ArrayList<Zone> getNoVoisins(){return noVoisins;}
+	
+	private HashMap<Integer, ArrayList<Zone>> zonesLands;
 	
 	public Terrain(int width, int height, double Seed)
 	{
@@ -60,16 +63,21 @@ public class Terrain {
 		System.out.println("Zones Created in " + (new Date().getTime() - startZones.getTime()) + "ms\n Merging Zones...");
 
 		Date startMerge = new Date();
-		while(allZones.size() > 10)
-			mergeZones();
+		this.zonesLands = mergeForNations(10);
 
 		System.out.println("Zones merged in " + (new Date().getTime() - startMerge.getTime()) + "ms.");
+		
+		
+		for(Zone z : allZones)
+			computeNeighbours(z);
+		
 		System.out.println("OverAll generation in " + (new Date().getTime() - startTime.getTime()) + "ms.");
 		
 		return map1;
 	}
-	
+
 	public ArrayList<Zone> getAtomicPlaces(){return places;}
+	public HashMap<Integer, ArrayList<Zone>> getNationsOfPlaces(){return zonesLands;}
 
 	private void generate()
 	{
@@ -234,11 +242,17 @@ public class Terrain {
 					found = true;
 				}
 			}
-			if(found) mergeZones();
+			if(found)
+			{
+				zoneFusion(zonesToMerge());
+			}
 		}while(found);
+		
+		for(Zone z : allZones)
+			computeNeighbours(z);
 	}
 	
-	private void mergeZones()
+	private Zone[] zonesToMerge()
 	{
 		int smallerIndex = -1;
 		int smallerSize = (int)Float.POSITIVE_INFINITY;
@@ -252,26 +266,18 @@ public class Terrain {
 		}
 		
 		Zone smallerZone = allZones.get(smallerIndex);
-		smallerZone.resetNeighbours();
+		computeNeighbours(smallerZone);
 		
-		for(Zone s : allZones)
-		{
-			if(s != smallerZone) //state not checking boundaries with himslef
-			{
-				for(int[] bSmaller : smallerZone.getBoundaries())
-				{
-					if(getVoisins(bSmaller[0],bSmaller[1], s.getID()).size() != 0 && !smallerZone.getNeighbours().contains(s))
-					{
-						smallerZone.addNeighbour(s);
-					}
-				}
-			}
-		}
 		if(smallerZone.getNeighbours().size() == 0)
 		{
-			smallIslandMerge(smallerZone);
-			return;
+			Zone closest = findClosestLand(smallerZone);
+			if(closest.getID() == smallerZone.getID())
+				return null;
+			Zone[] tmp = {smallerZone, closest}; 
+			return tmp;
 		}
+		
+		
 		Zone otherZone;
 		if(Math.random() < -2)
 		{
@@ -282,56 +288,93 @@ public class Terrain {
 			otherZone = mergeZonesBoundaries(smallerZone);
 		}
 		
-		zoneFusion(smallerZone,otherZone);
+		Zone[] tmp = {smallerZone, otherZone};
+		if(otherZone.getID() == smallerZone.getID())
+			return null;
+		return tmp;
 		
 	}
 	
-	private Zone mergeZonesSize(Zone smallerZone)
+	private Zone mergeZonesSize(Zone z)
 	{
 		int smallerIndex = 0;
-		int smallerSize = smallerZone.getNeighbours().get(0).size();
-		for(int i = 0; i < smallerZone.getNeighbours().size(); i++)
+		int smallerSize = z.getNeighbours().get(0).size();
+		for(int i = 0; i < z.getNeighbours().size(); i++)
 		{
-			if(smallerSize > smallerZone.getNeighbours().get(i).size());
+			if(smallerSize > z.getNeighbours().get(i).size());
 			{
-				smallerSize = smallerZone.getNeighbours().get(i).size();
+				smallerSize = z.getNeighbours().get(i).size();
 				smallerIndex = i;
 			}
 		}
-		
-		return smallerZone.getNeighbours().get(smallerIndex);
+		return z.getNeighbours().get(smallerIndex);
 	}
 	
-	private Zone mergeZonesBoundaries(Zone smallerZone)
+	private Zone mergeZonesBoundaries(Zone z)
 	{
-		ArrayList<Integer> count = new ArrayList<>(); 
-		for(int i = 0; i < smallerZone.getNeighbours().size(); i++)
+		HashMap<Integer, Integer> count = new HashMap<>(); 
+		for(int i = 0; i < z.getNeighbours().size(); i++)
 		{
-			count.add(i,0);
-			for(int[] c : smallerZone.getBoundaries())
+			count.put(i,0);
+			
+			for(int[] c : z.getBoundaries())
 			{
-				if(getVoisins(c[0], c[1], smallerZone.getNeighbours().get(i).getID()).size() != 0)
+				if(getVoisins(c[0], c[1], z.getNeighbours().get(i).getID()).size() != 0)
 				{
-					count.set(i,count.get(i)+1);
+					count.put(i,count.get(i)+1);
 				}
 			}
 		}
-		int smallerIndex = 0;
+		int maxBoundariesIndex = 0;
 		int biggerBoundaries = 0;
-		for(int i = 0; i < count.size(); i++)
-		{
-			if(biggerBoundaries < count.get(i))
+		
+		for(HashMap.Entry<Integer, Integer> entry : count.entrySet())
+		{			
+			if(entry.getValue() > biggerBoundaries)
 			{
-				smallerIndex = i;
-				biggerBoundaries = count.get(i);
-			}
+				biggerBoundaries = entry.getValue();
+				maxBoundariesIndex = entry.getKey();
+			}		   
+		}
+
+		
+		return z.getNeighbours().get(maxBoundariesIndex);
+	}
+
+	private HashMap<Integer, ArrayList<Zone>> mergeForNations(int numberOfNationsWanted)
+	{
+		HashMap<Integer, ArrayList<Zone>> countries = new HashMap<>();
+		
+		for(Zone z : allZones)
+		{
+			ArrayList<Zone> tmp = new ArrayList<>();
+			tmp.add(z);
+			countries.put(z.getID(), tmp);
 		}
 		
-		return smallerZone.getNeighbours().get(smallerIndex);
-	}
-	
+		while(countries.size() >= numberOfNationsWanted)
+		{
+			Zone[] toMerge = zonesToMerge();
+			Zone lowerIDZone = Math.min(toMerge[0].getID(), toMerge[1].getID()) == toMerge[0].getID() ? toMerge[0] : toMerge[1];
+			Zone higherIDZone = Math.max(toMerge[0].getID(), toMerge[1].getID()) == toMerge[0].getID() ? toMerge[0] : toMerge[1];
+			
+			/** add place to country **/
+			ArrayList<Zone> shiftingLands = countries.get(higherIDZone.getID());
+			ArrayList<Zone> keptlands = new ArrayList<>(countries.get(lowerIDZone.getID()));
+			keptlands.addAll(shiftingLands);
+			
+			countries.put(lowerIDZone.getID(), keptlands);
+			
+			countries.remove(higherIDZone.getID());
+			
+			/** repainting the map **/
+			zoneFusion(toMerge);
+		}
 		
-	private void smallIslandMerge(Zone s)
+		return countries;		
+	}
+		
+	private Zone findClosestLand(Zone s)
 	{
 		double smallerDistance = Float.POSITIVE_INFINITY;
 		Zone closestZone = null;
@@ -352,8 +395,13 @@ public class Terrain {
 				}
 			}
 		}
-		
-		zoneFusion(s, closestZone);
+		return closestZone;
+	}
+	
+	private void zoneFusion(Zone[] zones)
+	{
+		if(zones.length >= 1)
+			zoneFusion(zones[0], zones[1]);
 	}
 	
 	private void zoneFusion(Zone s1, Zone s2)
@@ -392,13 +440,32 @@ public class Terrain {
 	}
 	
 	private void computeBoundaries(Zone s)
-	{
+	{		
 		s.resetBoundaries();
+		s.resetNeighbours();
 		for(int[] c : s.getLands())
 		{
 			if(getVoisins(c[0], c[1], s.getID()).size() < 4 )
 			{
 				s.addToBoundaries(c);
+			}
+		}
+	}
+	
+	private void computeNeighbours(Zone s)
+	{
+		s.resetNeighbours();
+		for(Zone z : allZones)
+		{
+			if(z != s)
+			{
+				for(int[] p : s.getBoundaries())
+				{
+					if(getVoisins(p[0],p[1], z.getID()).size() != 0 && !s.getNeighbours().contains(z))
+					{
+						s.addNeighbour(z);
+					}	
+				}
 			}
 		}
 	}
