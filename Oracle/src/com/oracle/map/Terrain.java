@@ -260,7 +260,7 @@ public class Terrain {
 			{
 				for(int[] bSmaller : smallerZone.getBoundaries())
 				{
-					if(getVoisins(bSmaller[0],bSmaller[1], s.getID()).size() != 0)
+					if(getVoisins(bSmaller[0],bSmaller[1], s.getID()).size() != 0 && !smallerZone.getNeighbours().contains(s))
 					{
 						smallerZone.addNeighbour(s);
 					}

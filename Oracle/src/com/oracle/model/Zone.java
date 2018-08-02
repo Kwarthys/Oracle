@@ -15,6 +15,13 @@ public class Zone {
 		zoneID = id;
 	}
 	
+	public Zone(Zone zone) {
+		this.lands = new ArrayList<>(zone.lands);
+		this.boundaries = new ArrayList<>(zone.boundaries);
+		this.neighbours = new ArrayList<>(zone.neighbours);
+		this.zoneID = zone.zoneID;
+	}
+
 	public int getID()
 	{
 		return zoneID;
