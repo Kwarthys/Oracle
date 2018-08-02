@@ -1,4 +1,4 @@
-package com.oracle.map.model;
+package com.oracle.model;
 
 import java.util.ArrayList;
 

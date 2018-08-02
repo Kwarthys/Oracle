@@ -3,9 +3,9 @@ package com.oracle.map;
 import java.util.ArrayList;
 import java.util.Date;
 
-import com.oracle.map.model.Manager;
-import com.oracle.map.model.Zone;
 import com.oracle.map.utils.ImprovedNoise;
+import com.oracle.model.Manager;
+import com.oracle.model.Zone;
 
 public class Terrain {
 	
@@ -58,8 +58,8 @@ public class Terrain {
 		System.out.println("Zones Created in " + (new Date().getTime() - startZones.getTime()) + "ms\n Merging Zones...");
 
 		Date startMerge = new Date();
-		//while(allZones.size() > 100)
-			//mergeZones();
+		while(allZones.size() > 10)
+			mergeZones();
 
 		System.out.println("Zones merged in " + (new Date().getTime() - startMerge.getTime()) + "ms.");
 		System.out.println("OverAll generation in " + (new Date().getTime() - startTime.getTime()) + "ms.");

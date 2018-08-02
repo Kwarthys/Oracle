@@ -18,6 +18,7 @@ public class NameGenerator {
 
 		boolean keep = true;
 		boolean voyelle = true;
+		boolean memory = false;
 		
 		char lastConsone = 's';
 
@@ -31,22 +32,30 @@ public class NameGenerator {
 				if(keep)
 				{
 					sb.append(voyelles[generator.nextInt(voyelles.length)]);
-					voyelle = true;
+					//voyelle = true;
 				}
 				else
 				{
 					lastConsone = consones[generator.nextInt(consones.length)];
 					sb.append(lastConsone);
 					voyelle = false;
+					memory = false;
 				}
 			}
 			else
 			{
 				if(keep)
 				{
-					if(generator.nextDouble() > 0.6)
-						sb.append(lastConsone);
-					voyelle = false;
+					if(!memory)
+					{
+						if(generator.nextDouble() > 0.6 && i != 1)
+						{
+							sb.append(lastConsone);
+							memory = true;
+						}
+							
+					}
+					//voyelle = false;
 				}
 				else
 				{

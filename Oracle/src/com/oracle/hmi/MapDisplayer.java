@@ -6,7 +6,7 @@ import java.awt.Graphics;
 import javax.swing.JPanel;
 
 import com.oracle.map.Terrain;
-import com.oracle.map.model.Zone;
+import com.oracle.model.Zone;
 
 @SuppressWarnings("serial")
 public class MapDisplayer extends JPanel{
