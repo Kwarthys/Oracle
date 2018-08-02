@@ -11,15 +11,16 @@ public class Window extends JFrame
 	private JPanel container = new JPanel();
 	private MapDisplayer sim;
 	
-	public Window()
+	public Window(MapDisplayer sim)
 	{	
-		setTitle("Risk Project");		
+		setTitle("Risk Project");
+		
+		this.sim = sim;
 		
 		container.setLayout(new BorderLayout());
 		
 		setSize(1050,1050);
-		sim = new MapDisplayer();
-		container.add(sim, BorderLayout.CENTER);
+		container.add(this.sim, BorderLayout.CENTER);
 			
 		this.setContentPane(container);
 		setVisible(true);	

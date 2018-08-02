@@ -2,13 +2,28 @@ package com.oracle.model;
 
 import java.util.ArrayList;
 
+import com.oracle.hmi.MapDisplayer;
+import com.oracle.hmi.Window;
+import com.oracle.map.Terrain;
 import com.oracle.utils.generators.NameGenerator;
 
 public class Manager {
 	
-	public static ArrayList<Place> places;
+	public ArrayList<Place> places;
+	
+	public Manager()
+	{
+		Terrain terrainGenerator = new Terrain(1000,1000, Math.random()*10);
+		int[][] map = terrainGenerator.generateMap();
+		
+		createPlaces(terrainGenerator.getAtomicPlaces());
+		
+		MapDisplayer display = new MapDisplayer(map, terrainGenerator.getAtomicPlaces());
+		//Window w = 
+		new Window(display);
+	}
 
-	public static void createPlaces(ArrayList<Zone> allZones)
+	public void createPlaces(ArrayList<Zone> allZones)
 	{
 		places = new ArrayList<>();
 		

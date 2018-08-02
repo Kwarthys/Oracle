@@ -2,36 +2,31 @@ package com.oracle.hmi;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.util.ArrayList;
 
 import javax.swing.JPanel;
 
-import com.oracle.map.Terrain;
 import com.oracle.model.Zone;
 
 @SuppressWarnings("serial")
 public class MapDisplayer extends JPanel{
 
-	private int map[][];
+	public int map[][];
+	private ArrayList<Zone> places;
 	
-	private Terrain terrainGenerator;
-	
-	public MapDisplayer()
+	public MapDisplayer(int[][] map, ArrayList<Zone> places)
 	{
 		super();
 		
-		terrainGenerator = new Terrain(1000,1000, Math.random()*10);
+		this.map = map;
 		
-		map = terrainGenerator.generateMap();
+		this.places = new ArrayList<>(places);
 	}
 	
 	
 	
 	public void paintComponent(Graphics g)
-	{		
-		int stateMaxID = 0;
-		for(int i = 0; i < terrainGenerator.getAllZones().size();i++)
-			stateMaxID = Math.max(stateMaxID, terrainGenerator.getAllZones().get(i).getID());
-		
+	{
 		for(int j = 0; j < 1000;j++)
 		{
 			for(int i = 0; i < 1000;i++)
@@ -42,24 +37,18 @@ public class MapDisplayer extends JPanel{
 				{
 					g.setColor(new Color((int)(Math.pow(map[j][i],8)%255), (int)(Math.pow(map[j][i],6)%255) ,(int)(Math.pow(map[j][i],7)%255)));
 				}
-				
-				
 				g.fillRect(i, j, 1,1);
-				
-				//g.setColor(Color.WHITE);
-				//g.drawRect(150, 150, 700, 700);
 			}
 		}
-		System.out.println("Nb of Zones : " + terrainGenerator.getAllZones().size());
-		g.setColor(Color.BLACK);
-		for(Zone s : terrainGenerator.getAllZones())
+		
+		
+		g.setColor(new Color(255,255,255,50));
+		for(Zone z : places)
 		{
-			for(int[] c : s.getBoundaries())
-			{
-				g.fillRect(c[1], c[0], 1,1);
+			for(int[] boundaryPoint : z.getBoundaries())
+			{				
+				g.fillRect(boundaryPoint[1], boundaryPoint[0], 1,1);
 			}
 		}
-		
-		
 	}
 }

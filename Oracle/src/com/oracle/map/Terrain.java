@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import com.oracle.map.utils.ImprovedNoise;
-import com.oracle.model.Manager;
 import com.oracle.model.Zone;
 
 public class Terrain {
@@ -18,14 +17,17 @@ public class Terrain {
 	private ArrayList<Zone> allZones = new ArrayList<>();
 	public ArrayList<Zone> getAllZones(){return allZones;}
 	
+	private ArrayList<Zone> places;
+	
 	private ArrayList<Zone> noVoisins = new ArrayList<>();
 	public ArrayList<Zone> getNoVoisins(){return noVoisins;}
 	
-	public Terrain(int pwidth, int pheight, double pSeed)
+	public Terrain(int width, int height, double Seed)
 	{
-		width = pwidth; height = pheight;
+		this.width = width;
+		this.height = height;
 		
-		seed = pSeed;
+		this.seed = Seed;
 		
 		map1 = new int[height][width];
 		map2 = new int[height][width];
@@ -52,7 +54,7 @@ public class Terrain {
 		System.out.println("Cleaning too small zones ....");		
 		cleanSmallZones();
 		
-		Manager.createPlaces(allZones);
+		places = new ArrayList<>(allZones);
 
 
 		System.out.println("Zones Created in " + (new Date().getTime() - startZones.getTime()) + "ms\n Merging Zones...");
@@ -66,6 +68,8 @@ public class Terrain {
 		
 		return map1;
 	}
+	
+	public ArrayList<Zone> getAtomicPlaces(){return places;}
 
 	private void generate()
 	{
