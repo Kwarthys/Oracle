@@ -39,4 +39,24 @@ public class Nation
 	{
 		this.neighbours = new ArrayList<>(neighbours);
 	}
+	
+
+	
+	public ArrayList<Place> findPlacesNear(int targetId)
+	{
+		ArrayList<Place> places = new ArrayList<>();
+		
+		for(Place p : this.places)
+		{
+			for(Place v : p.neighbours)
+			{
+				if(v.owner == targetId)
+				{
+					places.add(v);
+				}
+			}
+		}
+		
+		return places;
+	}
 }

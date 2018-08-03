@@ -27,6 +27,8 @@ public class Terrain {
 	
 	private HashMap<Integer, ArrayList<Zone>> zonesLands;
 	
+	private HashMap<Zone, ArrayList<Zone>> zonesNeighbours;
+	
 	public Terrain(int width, int height, double Seed)
 	{
 		this.width = width;
@@ -59,7 +61,13 @@ public class Terrain {
 		System.out.println("Cleaning too small zones ....");		
 		cleanSmallZones();
 		
-		places = new ArrayList<>(allZones);
+		places = new ArrayList<>();
+		for(Zone z : allZones)
+		{
+			places.add(new Zone(z));
+		}
+		
+		savePlaceNeighbours();
 		
 
 
@@ -82,10 +90,21 @@ public class Terrain {
 		return map1;
 	}
 	
+	private void savePlaceNeighbours()
+	{
+		this.zonesNeighbours = new HashMap<>();
+		
+		for(Zone zCurrent : places)
+		{			
+			this.zonesNeighbours.put(zCurrent, new ArrayList<>(zCurrent.getNeighbours()));
+		}
+	}
+
 	public int[][] getMap(){return map1;}
 
 	public ArrayList<Zone> getAtomicPlaces(){return places;}
 	public HashMap<Integer, ArrayList<Zone>> getNationsOfPlaces(){return zonesLands;}
+	public HashMap<Zone, ArrayList<Zone>> getZonesNeighbours(){return zonesNeighbours;}
 
 	private void generate()
 	{
@@ -559,5 +578,15 @@ public class Terrain {
 	static public double Distance(int[] p1, int[] p2)
 	{
 		return Distance(p1[0], p1[1], p2[0], p2[1]);
+	}
+
+	public void repaintZone(ArrayList<int[]> lands, int id)
+	{
+		for(int i = 0; i < lands.size();i++)
+		{
+			int[] p = lands.get(i);
+			map1[p[0]][p[1]] = id;
+		}
+		
 	}
 }

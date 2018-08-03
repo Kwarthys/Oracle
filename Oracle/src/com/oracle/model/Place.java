@@ -16,16 +16,23 @@ public class Place {
 	
 	public int owner;
 	
+	private int zoneID;
+	
 	public Place()
 	{
 		landValue = 0.5;
 	}
-	
-	public Place(ArrayList<int[]> lands, ArrayList<int[]> boundaries, double value, String name)
+
+	public Place(ArrayList<int[]> lands, ArrayList<int[]> boundaries, int zoneID, double value, String name)
 	{
 		this.lands = new ArrayList<>(lands);
 		this.boundaries = new ArrayList<>(boundaries);
 		this.landValue = value;
 		this.name = name;
+		this.zoneID = zoneID;
+	}
+	
+	public int getZoneID() {
+		return zoneID;
 	}
 }

@@ -1,7 +1,10 @@
 package com.oracle.model;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import com.oracle.hmi.MapDisplayer;
@@ -23,6 +26,8 @@ public class Manager {
 		
 		createNations(terrainManager.getAllZones(), terrainManager.getNationsOfPlaces());
 		
+		computePlacesNeighbours();
+		
 		int[][] map = terrainManager.getMap();
 		
 		MapDisplayer display = new MapDisplayer(map, this.places);
@@ -32,7 +37,45 @@ public class Manager {
 		startTheGame();
 	}
 
+
+	private void computePlacesNeighbours()
+	{		
+		for (Map.Entry<Zone, ArrayList<Zone>> entry : terrainManager.getZonesNeighbours().entrySet())
+		{
+			Place p = getPlaceByZoneID(entry.getKey().getID());
+			
+			if(p!=null)
+			{
+				ArrayList<Place> neighbours = new ArrayList<>();
+				for(Zone z : entry.getValue())
+				{
+					Place n = getPlaceByZoneID(z.getID());
+					if(n != null)
+					{
+						neighbours.add(n);
+					}
+				}
+				
+				p.neighbours = neighbours;
+			}
+		}			
+	}
 	
+	private Place getPlaceByZoneID(int zoneID)
+	{
+		for(int i = 0; i < places.size(); i++)
+		{
+			if(zoneID == places.get(i).getZoneID())
+			{
+				return places.get(i);
+			}
+		}
+		
+		System.err.println("Returning Null in getPlaceByZoneID.");
+		return null;
+	}
+
+
 	private void startTheGame()
 	{
 		drawWarEvent();		
@@ -56,19 +99,36 @@ public class Manager {
 		System.out.println("Nation:" + protagonist.getID() + " vs " + "other:" + otherNation.getID());
 		
 		//Find places of otherNation neighbours of nation
-		//findPlacesNear();
-	}
-	/*
-	private ArrayList<Place> findPlacesNear()
-	{
-		ArrayList<Place> places = new ArrayList<>();
+		ArrayList<Place> possibilities = protagonist.findPlacesNear(otherNation.getID());
+		
+		Collections.shuffle(possibilities);
+		
+		Place p = possibilities.get(0);
 		
 		
-		
-		return places;
+		System.out.print("Press Enter to continue");
+		try {
+			System.in.read();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		System.out.println(" Yeah.");
+		switchProperty(p, otherNation, protagonist);
 	}
 	
-	*/
+	
+	private void switchProperty(Place place, Nation src, Nation dest)
+	{
+		place.owner = dest.getID();
+		src.getPlaces().remove(place);
+		dest.getPlaces().add(place);
+		
+		terrainManager.repaintZone(place.lands, dest.getID());
+	}
+	
+	
 	public Nation findNationByID(int id)
 	{
 		for(Nation n : nations)
@@ -121,7 +181,7 @@ public class Manager {
 		
 		for(Zone z : zones)
 		{
-			Place daPlace = new Place(z.getLands(), z.getBoundaries(), 0.5, NameGenerator.getRandomName());
+			Place daPlace = new Place(z.getLands(), z.getBoundaries(), z.getID(), 0.5, NameGenerator.getRandomName());
 			daPlace.owner = ownerId;
 			daPlace.seaAccess = this.terrainManager.hasSeaAccess(z);
 			places.add(daPlace);
