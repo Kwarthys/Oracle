@@ -13,14 +13,18 @@ public class Manager {
 	public ArrayList<Place> places = new ArrayList<>();
 	public ArrayList<Nation> nations = new ArrayList<>();
 	
+	private Terrain terrainManager;
+	
 	public Manager()
 	{
-		Terrain terrainManager = new Terrain(1000,1000, Math.random()*10);
-		int[][] map = terrainManager.generateMap();
+		this.terrainManager = new Terrain(1000,1000, Math.random()*10);
+		terrainManager.generateMap();
 		
 		createNations(terrainManager.getAllZones(), terrainManager.getNationsOfPlaces());
 		
-		MapDisplayer display = new MapDisplayer(map, terrainManager.getAtomicPlaces());
+		int[][] map = terrainManager.getMap();
+		
+		MapDisplayer display = new MapDisplayer(map, this.places);
 		//Window w = 
 		new Window(display);
 		
@@ -99,6 +103,7 @@ public class Manager {
 		{
 			Place daPlace = new Place(z.getLands(), z.getBoundaries(), 0.5, NameGenerator.getRandomName());
 			daPlace.owner = ownerId;
+			daPlace.seaAccess = this.terrainManager.hasSeaAccess(z);
 			places.add(daPlace);
 			this.places.add(daPlace);
 		}

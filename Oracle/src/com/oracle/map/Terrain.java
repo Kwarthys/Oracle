@@ -9,6 +9,8 @@ import com.oracle.model.Zone;
 
 public class Terrain {
 	
+	public static final int SEA_CODE = -3;
+	
 	int map2[][], map1[][], width, height;
 	
 	private double seed;
@@ -58,9 +60,10 @@ public class Terrain {
 		cleanSmallZones();
 		
 		places = new ArrayList<>(allZones);
+		
 
 
-		System.out.println("Zones Created in " + (new Date().getTime() - startZones.getTime()) + "ms\n Merging Zones...");
+		System.out.println("Zones Created in " + (new Date().getTime() - startZones.getTime()) + "ms\nMerging Zones...");
 
 		Date startMerge = new Date();
 		this.zonesLands = mergeForNations(10);
@@ -71,10 +74,15 @@ public class Terrain {
 		for(Zone z : allZones)
 			computeNeighbours(z);
 		
+		System.out.println("Filling the sea");
+		fillTheSea();
+		
 		System.out.println("OverAll generation in " + (new Date().getTime() - startTime.getTime()) + "ms.");
 		
 		return map1;
 	}
+	
+	public int[][] getMap(){return map1;}
 
 	public ArrayList<Zone> getAtomicPlaces(){return places;}
 	public HashMap<Integer, ArrayList<Zone>> getNationsOfPlaces(){return zonesLands;}
@@ -126,35 +134,91 @@ public class Terrain {
 		}
 	}
 	
+	/*
+	private void applyMap(int[][] mapSource, int[][] mapDest)
+	{
+		for(int j = 0; j < height;j++)
+		{
+			for(int i = 0; i < width;i++)
+			{
+				mapDest[j][i] = mapSource[j][i];
+			}
+		}
+	}
+	*/
+	
 	private ArrayList<int[]> getVoisins(int j, int i, int comparator)
 	{
 		ArrayList<int[]> leReturn = new ArrayList<int[]>();
 		
-		if(map1[j-1][i] == comparator)//DESSUS
+		if(j-1 >= 0)
 		{
-			int[] tmp = {j-1,i};
-			leReturn.add(tmp);
+			if(map1[j-1][i] == comparator)//DESSUS
+			{
+				int[] tmp = {j-1,i};
+				leReturn.add(tmp);
+			}
 		}
 		
-		if(map1[j+1][i] == comparator)//DESSOUS
+		if(j+1 < width)
 		{
-			int[] tmp = {j+1,i};
-			leReturn.add(tmp);
+			if(map1[j+1][i] == comparator)//DESSOUS
+			{
+				int[] tmp = {j+1,i};
+				leReturn.add(tmp);
+			}
 		}
 		
-		if(map1[j][i+1] == comparator)//DROITE
+		if(i+1 < height)
 		{
-			int[] tmp = {j,i+1};
-			leReturn.add(tmp);
+			if(map1[j][i+1] == comparator)//DROITE
+			{
+				int[] tmp = {j,i+1};
+				leReturn.add(tmp);
+			}
 		}
 		
-		if(map1[j][i-1] == comparator)//GAUCHE
+		if(i-1 >= 0)
 		{
-			int[] tmp = {j,i-1};
-			leReturn.add(tmp);
+			if(map1[j][i-1] == comparator)//GAUCHE
+			{
+				int[] tmp = {j,i-1};
+				leReturn.add(tmp);
+			}
 		}
 		
 		return leReturn;
+	}
+	
+	
+	private void fillTheSea()
+	{
+		ArrayList<int[]> toVisit = new ArrayList<>();
+
+		int[] tmp = {0,0};
+		toVisit.add(tmp);
+		
+		while(toVisit.size() > 0)
+		{
+			int[] p = toVisit.remove(0);
+			
+			map1[p[0]][p[1]] = SEA_CODE;
+			
+			for(int[] candidate : getVoisins(p[0], p[1], 0))
+			{
+				boolean found = false;
+				for(int i = 0; i < toVisit.size() && !found; i++)
+				{
+					if(candidate[0] == toVisit.get(i)[0] && candidate[1] == toVisit.get(i)[1])
+					{
+						found = true;
+					}
+				}
+				
+				if(!found)
+					toVisit.add(candidate);
+			}
+		}
 	}
 	
 	private void drawZones()
@@ -468,6 +532,23 @@ public class Terrain {
 				}
 			}
 		}
+	}
+	
+	public boolean hasSeaAccess(Zone z)
+	{
+
+		//applyMap(map1, map2);
+		//applyMap(mapPlacesMemory, map1);
+		
+		for(int[] p : z.getBoundaries())
+		{
+			if(getVoisins(p[0], p[1], SEA_CODE).size() > 0)
+				return true;
+		}
+
+		//applyMap(map2, map1);
+		
+		return false;
 	}
 	
 	static public double Distance(int x1, int y1, int x2, int y2)

@@ -10,6 +10,8 @@ public class Place {
 	
 	public double landValue;
 	
+	public boolean seaAccess;
+	
 	public String name;
 	
 	public int owner;
