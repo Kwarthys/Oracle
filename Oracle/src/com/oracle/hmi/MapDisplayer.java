@@ -44,9 +44,9 @@ public class MapDisplayer extends JPanel{
 				
 		for(Place z : places)
 		{
-			g.setColor(new Color(0,0,0,250));
+			g.setColor(new Color(0,0,0,50));
 			if(z.seaAccess)
-				g.setColor(Color.WHITE);
+				g.setColor(new Color(250,250,250,50));
 			
 			for(int[] boundaryPoint : z.boundaries)
 			{				

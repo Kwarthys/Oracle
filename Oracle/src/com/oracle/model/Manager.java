@@ -2,6 +2,7 @@ package com.oracle.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 
 import com.oracle.hmi.MapDisplayer;
 import com.oracle.hmi.Window;
@@ -40,15 +41,34 @@ public class Manager {
 	
 	private void drawWarEvent()
 	{
-		/*
+		Nation protagonist;
 		Random generator = new Random();
-		int nationIndexOne = generator.nextInt(nations.size());
-		Nation protagonist = nations.get(nationIndexOne);
-		*/
-		System.out.println(findNationByID(1).getNeighbours().size());
+		
+		do
+		{			
+			int nationIndexOne = generator.nextInt(nations.size());
+			protagonist = nations.get(nationIndexOne);			
+		}while(protagonist.getNeighbours().size() == 0);
+		
+		int randIndex = generator.nextInt(protagonist.getNeighbours().size());
+		Nation otherNation = protagonist.getNeighbours().get(randIndex);
+		
+		System.out.println("Nation:" + protagonist.getID() + " vs " + "other:" + otherNation.getID());
+		
+		//Find places of otherNation neighbours of nation
+		//findPlacesNear();
+	}
+	/*
+	private ArrayList<Place> findPlacesNear()
+	{
+		ArrayList<Place> places = new ArrayList<>();
+		
+		
+		
+		return places;
 	}
 	
-	
+	*/
 	public Nation findNationByID(int id)
 	{
 		for(Nation n : nations)
