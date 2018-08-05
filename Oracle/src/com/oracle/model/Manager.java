@@ -103,8 +103,6 @@ public class Manager {
 		int randIndex = generator.nextInt(protagonist.getNeighbours().size());
 		Nation otherNation = protagonist.getNeighbours().get(randIndex);
 		
-		System.out.print("Attack:" + protagonist.getID() + " vs lose:" + otherNation.getID());
-		
 		//Find places of otherNation neighbours of nation
 		ArrayList<Place> possibilities = protagonist.findPlacesNear(otherNation.getID());
 		
@@ -128,13 +126,29 @@ public class Manager {
 		src.getPlaces().remove(place);
 		dest.getPlaces().add(place);
 		
-		System.out.print(" size:" + place.lands.size() + ". ID:" + place.getZoneID());
-		
-		System.err.println(place.lands.size() > 1500 ? " " + place.lands.size() : "");
-		
 		terrainManager.repaintZone(place.lands, dest.getID());
+
+		if(src.getPlaces().size() == 0)
+		{
+			this.nations.remove(src);
+		}
+		else
+		{
+			registerNewNeighborhood(src);
+		}
+		
+		registerNewNeighborhood(dest);
 	}
 	
+	public void registerNewNeighborhood(Nation n)
+	{
+		ArrayList<Nation> neighbours = new ArrayList<>();		
+		for(Integer id : n.getNewNeighborhood())
+		{
+			neighbours.add(findNationByID(id));
+		}		
+		n.setNeighbours(neighbours);
+	}
 	
 	public Nation findNationByID(int id)
 	{
@@ -186,8 +200,6 @@ public class Manager {
 	public ArrayList<Place> createPlaces(ArrayList<Integer> arrayList, int ownerId)
 	{
 		ArrayList<Place> places = new ArrayList<>();
-		
-		System.out.println("CreatePlaces");
 		
 		for(Integer zoneID : arrayList)
 		{

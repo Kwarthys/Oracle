@@ -59,4 +59,23 @@ public class Nation
 		
 		return places;
 	}
+
+
+	public ArrayList<Integer> getNewNeighborhood()
+	{
+		ArrayList<Integer> voisins = new ArrayList<>();
+		
+		for(Place p : this.places)
+		{
+			for(Place v : p.neighbours)
+			{
+				if(!voisins.contains(v.owner))
+				{
+					voisins.add(v.owner);
+				}
+			}
+		}
+		
+		return voisins;
+	}
 }

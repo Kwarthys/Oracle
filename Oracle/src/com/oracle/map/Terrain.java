@@ -6,7 +6,6 @@ import java.util.HashMap;
 
 import com.oracle.map.utils.ImprovedNoise;
 import com.oracle.model.Zone;
-import com.oracle.utils.MyTools;
 
 public class Terrain {
 	
