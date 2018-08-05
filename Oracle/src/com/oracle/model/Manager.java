@@ -1,6 +1,5 @@
 package com.oracle.model;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,12 +9,16 @@ import java.util.Random;
 import com.oracle.hmi.MapDisplayer;
 import com.oracle.hmi.Window;
 import com.oracle.map.Terrain;
+import com.oracle.utils.Callback;
 import com.oracle.utils.generators.NameGenerator;
 
 public class Manager {
 	
 	public ArrayList<Place> places = new ArrayList<>();
 	public ArrayList<Nation> nations = new ArrayList<>();
+	
+	private MapDisplayer display;
+	private Window window;
 	
 	private Terrain terrainManager;
 	
@@ -30,9 +33,8 @@ public class Manager {
 		
 		int[][] map = terrainManager.getMap();
 		
-		MapDisplayer display = new MapDisplayer(map, this.places);
-		//Window w = 
-		new Window(display);
+		display = new MapDisplayer(map, this.places);
+		window = new Window(display);
 		
 		startTheGame();
 	}
@@ -77,8 +79,13 @@ public class Manager {
 
 
 	private void startTheGame()
-	{
-		drawWarEvent();		
+	{		
+		window.registerListener(new Callback(){			
+			@Override
+			public void callback(){
+				drawWarEvent();
+			}
+		});
 	}
 	
 	
@@ -96,26 +103,22 @@ public class Manager {
 		int randIndex = generator.nextInt(protagonist.getNeighbours().size());
 		Nation otherNation = protagonist.getNeighbours().get(randIndex);
 		
-		System.out.println("Nation:" + protagonist.getID() + " vs " + "other:" + otherNation.getID());
+		System.out.print("Attack:" + protagonist.getID() + " vs lose:" + otherNation.getID());
 		
 		//Find places of otherNation neighbours of nation
 		ArrayList<Place> possibilities = protagonist.findPlacesNear(otherNation.getID());
 		
 		Collections.shuffle(possibilities);
 		
-		Place p = possibilities.get(0);
-		
-		
-		System.out.print("Press Enter to continue");
-		try {
-			System.in.read();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if(possibilities.size() == 0)
+		{
+			System.err.println("No eligible places");
 		}
-
-		System.out.println(" Yeah.");
-		switchProperty(p, otherNation, protagonist);
+		else
+		{
+			Place p = possibilities.get(0);
+			switchProperty(p, otherNation, protagonist);
+		}
 	}
 	
 	
@@ -124,6 +127,10 @@ public class Manager {
 		place.owner = dest.getID();
 		src.getPlaces().remove(place);
 		dest.getPlaces().add(place);
+		
+		System.out.print(" size:" + place.lands.size() + ". ID:" + place.getZoneID());
+		
+		System.err.println(place.lands.size() > 1500 ? " " + place.lands.size() : "");
 		
 		terrainManager.repaintZone(place.lands, dest.getID());
 	}
@@ -140,17 +147,18 @@ public class Manager {
 	}
 
 
-	private void createNations(ArrayList<Zone> zones, HashMap<Integer, ArrayList<Zone>> placesOfZones)
+	private void createNations(ArrayList<Zone> zones, HashMap<Integer, ArrayList<Integer>> hashMap)
 	{
 		nations = new ArrayList<>();
 		
 		for(Zone z : zones)
 		{
 			Nation n = new Nation(new ArrayList<Actor>(), NameGenerator.getRandomName(), z.getID());
-			n.setPlaces(createPlaces(placesOfZones.get(z.getID()), z.getID()));
+			n.setPlaces(createPlaces(hashMap.get(z.getID()), z.getID()));
 			nations.add(n);
 		}
 		
+		/*** Managing Nation neighbourhood ***/
 		for(Nation n : nations)
 		{
 			ArrayList<Nation> voisins = new ArrayList<>();
@@ -175,12 +183,15 @@ public class Manager {
 		}
 	}
 
-	public ArrayList<Place> createPlaces(ArrayList<Zone> zones, int ownerId)
+	public ArrayList<Place> createPlaces(ArrayList<Integer> arrayList, int ownerId)
 	{
 		ArrayList<Place> places = new ArrayList<>();
 		
-		for(Zone z : zones)
+		System.out.println("CreatePlaces");
+		
+		for(Integer zoneID : arrayList)
 		{
+			Zone z = getAtomicZoneByZoneID(zoneID);
 			Place daPlace = new Place(z.getLands(), z.getBoundaries(), z.getID(), 0.5, NameGenerator.getRandomName());
 			daPlace.owner = ownerId;
 			daPlace.seaAccess = this.terrainManager.hasSeaAccess(z);
@@ -189,6 +200,19 @@ public class Manager {
 		}
 		
 		return places;
+	}
+
+
+	private Zone getAtomicZoneByZoneID(Integer zoneID)
+	{
+		for(Zone z : terrainManager.getAtomicPlaces())
+		{
+			if(z.getID() == zoneID)
+				return z;
+		}
+		
+		System.err.println("Returning null in getAtomicZoneByZoneID.");
+		return null;
 	}
 
 }

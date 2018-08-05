@@ -1,9 +1,13 @@
 package com.oracle.hmi;
 
 import java.awt.BorderLayout;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+
+import com.oracle.utils.Callback;
 
 @SuppressWarnings("serial")
 public class Window extends JFrame
@@ -51,4 +55,27 @@ public class Window extends JFrame
 		}
 	}
 	*/
+
+	
+	public void registerListener(Callback cb)
+	{
+		this.addKeyListener(new KeyListener() {
+			
+			@Override
+			public void keyTyped(KeyEvent e) {}
+			
+			@Override
+			public void keyReleased(KeyEvent e) {}
+			
+			@Override
+			public void keyPressed(KeyEvent e)
+			{
+				if(e.getKeyCode() == KeyEvent.VK_ENTER)
+				{
+					cb.callback();
+					repaint();
+				}
+			}
+		});
+	}
 }

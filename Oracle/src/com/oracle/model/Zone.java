@@ -2,6 +2,8 @@ package com.oracle.model;
 
 import java.util.ArrayList;
 
+import com.oracle.utils.MyTools;
+
 public class Zone {
 	
 	private ArrayList<int[]> lands = new ArrayList<>();
@@ -16,8 +18,8 @@ public class Zone {
 	}
 	
 	public Zone(Zone zone) {
-		this.lands = new ArrayList<>(zone.lands);
-		this.boundaries = new ArrayList<>(zone.boundaries);
+		this.lands = MyTools.arrayCopy(zone.lands);		
+		this.boundaries = MyTools.arrayCopy(zone.boundaries);
 		this.neighbours = new ArrayList<>(zone.neighbours);
 		this.zoneID = zone.zoneID;
 	}

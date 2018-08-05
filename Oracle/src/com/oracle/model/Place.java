@@ -2,6 +2,8 @@ package com.oracle.model;
 
 import java.util.ArrayList;
 
+import com.oracle.utils.MyTools;
+
 public class Place {
 
 	public ArrayList<int[]> lands = new ArrayList<>();
@@ -25,8 +27,8 @@ public class Place {
 
 	public Place(ArrayList<int[]> lands, ArrayList<int[]> boundaries, int zoneID, double value, String name)
 	{
-		this.lands = new ArrayList<>(lands);
-		this.boundaries = new ArrayList<>(boundaries);
+		this.lands = MyTools.arrayCopy(lands);
+		this.boundaries = MyTools.arrayCopy(boundaries);
 		this.landValue = value;
 		this.name = name;
 		this.zoneID = zoneID;

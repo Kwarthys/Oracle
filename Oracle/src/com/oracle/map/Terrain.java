@@ -6,6 +6,7 @@ import java.util.HashMap;
 
 import com.oracle.map.utils.ImprovedNoise;
 import com.oracle.model.Zone;
+import com.oracle.utils.MyTools;
 
 public class Terrain {
 	
@@ -25,7 +26,7 @@ public class Terrain {
 	private ArrayList<Zone> noVoisins = new ArrayList<>();
 	public ArrayList<Zone> getNoVoisins(){return noVoisins;}
 	
-	private HashMap<Integer, ArrayList<Zone>> zonesLands;
+	private HashMap<Integer, ArrayList<Integer>> zonesLands;
 	
 	private HashMap<Zone, ArrayList<Zone>> zonesNeighbours;
 	
@@ -68,13 +69,11 @@ public class Terrain {
 		}
 		
 		savePlaceNeighbours();
-		
-
 
 		System.out.println("Zones Created in " + (new Date().getTime() - startZones.getTime()) + "ms\nMerging Zones...");
 
 		Date startMerge = new Date();
-		this.zonesLands = mergeForNations(10);
+		this.zonesLands = mergeForNations(7);
 
 		System.out.println("Zones merged in " + (new Date().getTime() - startMerge.getTime()) + "ms.");
 		
@@ -103,7 +102,7 @@ public class Terrain {
 	public int[][] getMap(){return map1;}
 
 	public ArrayList<Zone> getAtomicPlaces(){return places;}
-	public HashMap<Integer, ArrayList<Zone>> getNationsOfPlaces(){return zonesLands;}
+	public HashMap<Integer, ArrayList<Integer>> getNationsOfPlaces(){return zonesLands;}
 	public HashMap<Zone, ArrayList<Zone>> getZonesNeighbours(){return zonesNeighbours;}
 
 	private void generate()
@@ -364,11 +363,11 @@ public class Terrain {
 		Zone otherZone;
 		if(Math.random() < -2)
 		{
-			otherZone = mergeZonesSize(smallerZone);
+			otherZone = mergeZonesBySize(smallerZone);
 		}
 		else
 		{
-			otherZone = mergeZonesBoundaries(smallerZone);
+			otherZone = mergeZonesByBoundaries(smallerZone);
 		}
 		
 		Zone[] tmp = {smallerZone, otherZone};
@@ -378,7 +377,7 @@ public class Terrain {
 		
 	}
 	
-	private Zone mergeZonesSize(Zone z)
+	private Zone mergeZonesBySize(Zone z)
 	{
 		int smallerIndex = 0;
 		int smallerSize = z.getNeighbours().get(0).size();
@@ -393,7 +392,7 @@ public class Terrain {
 		return z.getNeighbours().get(smallerIndex);
 	}
 	
-	private Zone mergeZonesBoundaries(Zone z)
+	private Zone mergeZonesByBoundaries(Zone z)
 	{
 		HashMap<Integer, Integer> count = new HashMap<>(); 
 		for(int i = 0; i < z.getNeighbours().size(); i++)
@@ -424,26 +423,26 @@ public class Terrain {
 		return z.getNeighbours().get(maxBoundariesIndex);
 	}
 
-	private HashMap<Integer, ArrayList<Zone>> mergeForNations(int numberOfNationsWanted)
+	private HashMap<Integer, ArrayList<Integer>> mergeForNations(int numberOfNationsWanted)
 	{
-		HashMap<Integer, ArrayList<Zone>> countries = new HashMap<>();
+		HashMap<Integer, ArrayList<Integer>> countries = new HashMap<>();
 		
 		for(Zone z : allZones)
 		{
-			ArrayList<Zone> tmp = new ArrayList<>();
-			tmp.add(z);
+			ArrayList<Integer> tmp = new ArrayList<>();
+			tmp.add(z.getID());
 			countries.put(z.getID(), tmp);
 		}
 		
-		while(countries.size() >= numberOfNationsWanted)
+		while(countries.size() > numberOfNationsWanted)
 		{
 			Zone[] toMerge = zonesToMerge();
 			Zone lowerIDZone = Math.min(toMerge[0].getID(), toMerge[1].getID()) == toMerge[0].getID() ? toMerge[0] : toMerge[1];
 			Zone higherIDZone = Math.max(toMerge[0].getID(), toMerge[1].getID()) == toMerge[0].getID() ? toMerge[0] : toMerge[1];
 			
 			/** add place to country **/
-			ArrayList<Zone> shiftingLands = countries.get(higherIDZone.getID());
-			ArrayList<Zone> keptlands = new ArrayList<>(countries.get(lowerIDZone.getID()));
+			ArrayList<Integer> shiftingLands = countries.get(higherIDZone.getID());
+			ArrayList<Integer> keptlands = new ArrayList<>(countries.get(lowerIDZone.getID()));
 			keptlands.addAll(shiftingLands);
 			
 			countries.put(lowerIDZone.getID(), keptlands);
