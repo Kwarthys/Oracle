@@ -69,7 +69,7 @@ public class Nation
 		{
 			for(Place v : p.neighbours)
 			{
-				if(!voisins.contains(v.owner))
+				if(!voisins.contains(v.owner) && v.owner != getID())
 				{
 					voisins.add(v.owner);
 				}

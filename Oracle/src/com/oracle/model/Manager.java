@@ -9,7 +9,9 @@ import java.util.Random;
 import com.oracle.hmi.MapDisplayer;
 import com.oracle.hmi.Window;
 import com.oracle.map.Terrain;
+import com.oracle.model.events.WarEvent;
 import com.oracle.utils.Callback;
+import com.oracle.utils.NationFinder;
 import com.oracle.utils.generators.NameGenerator;
 
 public class Manager {
@@ -21,6 +23,8 @@ public class Manager {
 	private Window window;
 	
 	private Terrain terrainManager;
+	
+	private NationFinder nationFinder;
 	
 	public Manager()
 	{
@@ -35,6 +39,13 @@ public class Manager {
 		
 		display = new MapDisplayer(map, this.places);
 		window = new Window(display);
+		
+		this.nationFinder = new NationFinder() {			
+			@Override
+			public Nation getNationById(int nationID) {
+				return findNationByID(nationID);
+			}
+		};
 		
 		startTheGame();
 	}
@@ -114,9 +125,16 @@ public class Manager {
 		}
 		else
 		{
-			Place p = possibilities.get(0);
-			switchProperty(p, otherNation, protagonist);
+			Place p = possibilities.get(0);			
+
+			WarEvent w = new WarEvent(nationFinder, p, protagonist.getID());
+			
+			if(w.getSuccess())
+				switchProperty(p, otherNation, protagonist);
+			
+			System.out.println(w.getStory());
 		}
+		
 	}
 	
 	
