@@ -39,7 +39,9 @@ public class WarEvent extends HistoricEvent
 		sb.append(nationFinder.getNationById(attackerID).name);
 		sb.append(" attacks ");
 		sb.append(attacked.name);
-		sb.append(" of Nation ");
+		sb.append("(");
+		sb.append(String.format("%.2f", attacked.landValue));
+		sb.append(") of Nation ");
 		sb.append(nationFinder.getNationById(defenderID).name);
 		
 		if(success)

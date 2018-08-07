@@ -14,6 +14,8 @@ public class Nation
 	
 	private int id;
 	
+	private Place placeWanted = null;
+	
 	public Nation(ArrayList<Actor> actors, String name, int id)
 	{
 		this.actors = new ArrayList<>(actors);
@@ -61,7 +63,7 @@ public class Nation
 	}
 
 
-	public ArrayList<Integer> getNewNeighborhood()
+	public ArrayList<Integer> getNeighborhood()
 	{
 		ArrayList<Integer> voisins = new ArrayList<>();
 		
@@ -77,5 +79,30 @@ public class Nation
 		}
 		
 		return voisins;
+	}
+
+	
+	public Place getPlans() {return placeWanted;}
+	
+
+	public void computeNewPlans()
+	{
+		placeWanted = null;
+		for(Place p : this.places)
+		{
+			for(Place v : p.neighbours)
+			{
+				if(v.owner != getID())
+				{
+					if(placeWanted == null)
+						placeWanted = v;
+					
+					else if(v.landValue > placeWanted.landValue)
+					{
+						placeWanted = v;
+					}
+				}
+			}
+		}		
 	}
 }

@@ -1,7 +1,6 @@
 package com.oracle.model;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -90,7 +89,12 @@ public class Manager {
 
 
 	private void startTheGame()
-	{		
+	{
+		for(Nation n : nations)
+		{
+			n.computeNewPlans();
+		}
+		
 		window.registerListener(new Callback(){			
 			@Override
 			public void callback(){
@@ -111,26 +115,17 @@ public class Manager {
 			protagonist = nations.get(nationIndexOne);			
 		}while(protagonist.getNeighbours().size() == 0);
 		
-		int randIndex = generator.nextInt(protagonist.getNeighbours().size());
-		Nation otherNation = protagonist.getNeighbours().get(randIndex);
-		
-		//Find places of otherNation neighbours of nation
-		ArrayList<Place> possibilities = protagonist.findPlacesNear(otherNation.getID());
-		
-		Collections.shuffle(possibilities);
-		
-		if(possibilities.size() == 0)
+		Place wanted = protagonist.getPlans();
+		if(wanted == null)
 		{
 			System.err.println("No eligible places");
 		}
 		else
-		{
-			Place p = possibilities.get(0);			
-
-			WarEvent w = new WarEvent(nationFinder, p, protagonist.getID());
+		{			
+			WarEvent w = new WarEvent(nationFinder, wanted, protagonist.getID());
 			
 			if(w.getSuccess())
-				switchProperty(p, otherNation, protagonist);
+				switchProperty(wanted, protagonist);
 			
 			System.out.println(w.getStory());
 		}
@@ -138,8 +133,9 @@ public class Manager {
 	}
 	
 	
-	private void switchProperty(Place place, Nation src, Nation dest)
+	private void switchProperty(Place place, Nation dest)
 	{
+		Nation src = findNationByID(place.owner);
 		place.owner = dest.getID();
 		src.getPlaces().remove(place);
 		dest.getPlaces().add(place);
@@ -150,18 +146,35 @@ public class Manager {
 		{
 			this.nations.remove(src);
 		}
-		else
+
+		ArrayList<Integer> toRefresh = new ArrayList<>();
+		toRefresh.add(src.getID());
+		toRefresh.add(dest.getID());
+		for(Place p : place.neighbours)
 		{
-			registerNewNeighborhood(src);
+			if(!toRefresh.contains(p.owner))
+			{
+				toRefresh.add(p.owner);
+			}
 		}
 		
-		registerNewNeighborhood(dest);
+		System.out.print("Refreshing nations ");
+		
+		for(Integer i : toRefresh)
+		{
+			Nation current = findNationByID(i);
+			registerNewNeighborhood(current);
+			current.computeNewPlans();
+			System.out.print(current.name + " ");
+		}
+		System.out.println();
+		
 	}
 	
-	public void registerNewNeighborhood(Nation n)
+	private void registerNewNeighborhood(Nation n)
 	{
 		ArrayList<Nation> neighbours = new ArrayList<>();		
-		for(Integer id : n.getNewNeighborhood())
+		for(Integer id : n.getNeighborhood())
 		{
 			neighbours.add(findNationByID(id));
 		}		
@@ -222,7 +235,7 @@ public class Manager {
 		for(Integer zoneID : arrayList)
 		{
 			Zone z = getAtomicZoneByZoneID(zoneID);
-			Place daPlace = new Place(z.getLands(), z.getBoundaries(), z.getID(), 0.5, NameGenerator.getRandomName());
+			Place daPlace = new Place(z.getLands(), z.getBoundaries(), z.getID(), Math.random(), NameGenerator.getRandomName());
 			daPlace.owner = ownerId;
 			daPlace.seaAccess = this.terrainManager.hasSeaAccess(z);
 			places.add(daPlace);
