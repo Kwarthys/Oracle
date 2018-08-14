@@ -1,6 +1,6 @@
 package com.oracle.launcher;
 
-import com.oracle.model.Manager;
+import com.oracle.manager.Manager;
 
 public class Launcher {
 

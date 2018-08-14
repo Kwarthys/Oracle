@@ -14,6 +14,8 @@ public class Nation
 	
 	private int id;
 	
+	private double score;
+	
 	private Place placeWanted = null;
 	
 	public Nation(ArrayList<Actor> actors, String name, int id)
@@ -31,6 +33,27 @@ public class Nation
 	public int getID() {return id;}
 	public ArrayList<Place> getPlaces(){return places;}
 	public ArrayList<Nation> getNeighbours(){return neighbours;}
+	public double getScore() {return score;}
+	
+	
+	public void changeScore(double amount)
+	{
+		score += amount;
+	}
+	
+	public void computeFirstScore()
+	{
+		double score = 0;
+		
+		for(Place p : this.places)
+		{
+			score += p.landValue;
+		}
+		
+		score += (Math.random() * score);
+		
+		this.score = score;
+	}
 	
 	public void setPlaces(ArrayList<Place> places)
 	{
