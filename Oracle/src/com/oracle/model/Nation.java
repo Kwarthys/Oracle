@@ -4,19 +4,17 @@ import java.util.ArrayList;
 
 public class Nation
 {
-	private ArrayList<Actor> actors;
-	
-	private ArrayList<Place> places;
-	
-	private ArrayList<Nation> neighbours;
-	
-	public String name;
-	
+	private ArrayList<Actor> actors;	
+	private ArrayList<Place> places;	
+	private ArrayList<Nation> neighbours;	
+	public String name;	
 	private int id;
 	
 	private double score;
 	
 	private Place placeWanted = null;
+	
+	private ArrayList<Penalty> penalties = new ArrayList<>();
 	
 	public Nation(ArrayList<Actor> actors, String name, int id)
 	{
@@ -34,6 +32,7 @@ public class Nation
 	public ArrayList<Place> getPlaces(){return places;}
 	public ArrayList<Nation> getNeighbours(){return neighbours;}
 	public double getScore() {return score;}
+	public ArrayList<Penalty> getPenalties(){return penalties;}
 	
 	
 	public void changeScore(double amount)
@@ -127,5 +126,27 @@ public class Nation
 				}
 			}
 		}		
+	}
+
+
+	public void addNewPenalty(Penalty penalty)
+	{
+		if(penalty.place == null)
+		{
+			penalties.add(penalty);
+			return;
+		}
+		
+		for(Penalty p : penalties)
+		{
+			if(p.place != null)
+			{
+				if(penalty.place == p.place)
+				{
+					p.startTurn = penalty.startTurn;
+					return;
+				}
+			}
+		}
 	}
 }

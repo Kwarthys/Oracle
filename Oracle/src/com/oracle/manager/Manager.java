@@ -9,6 +9,7 @@ import com.oracle.hmi.MapDisplayer;
 import com.oracle.hmi.Window;
 import com.oracle.map.Terrain;
 import com.oracle.model.Actor;
+import com.oracle.model.Penalty;
 import com.oracle.model.Nation;
 import com.oracle.model.Place;
 import com.oracle.model.Zone;
@@ -28,6 +29,8 @@ public class Manager {
 	private Terrain terrainManager;
 	
 	private NationFinder nationFinder;
+	
+	private int turnCount = 0;
 	
 	public Manager()
 	{
@@ -103,6 +106,7 @@ public class Manager {
 			@Override
 			public void callback(){
 				drawWarEvent();
+				turnCount++;
 			}
 		});
 	}
@@ -123,17 +127,26 @@ public class Manager {
 		if(wanted == null)
 		{
 			System.err.println("No eligible places");
+			return;
+		}	
+
+
+		WarEvent w = new WarEvent(nationFinder, wanted, protagonist.getID());
+
+		if(w.getSuccess())
+		{
+			switchProperty(wanted, protagonist);
 		}
 		else
-		{			
-			WarEvent w = new WarEvent(nationFinder, wanted, protagonist.getID());
-			
-			if(w.getSuccess())
-				switchProperty(wanted, protagonist);
-			
-			System.out.println(w.getStory());
+		{
+			findNationByID(wanted.owner).addNewPenalty(new Penalty(3, turnCount, wanted)); //defender
+			protagonist.addNewPenalty(new Penalty(2, turnCount));
 		}
-		
+			
+
+		System.out.println(w.getStory());
+
+
 	}
 	
 	
