@@ -2,6 +2,8 @@ package com.oracle.model;
 
 import java.util.ArrayList;
 
+import com.oracle.manager.Manager;
+
 public class Nation
 {
 	private ArrayList<Actor> actors;	
@@ -34,9 +36,26 @@ public class Nation
 	public double getScore() {return score;}
 	public ArrayList<Penalty> getPenalties(){return penalties;}
 	
+	public boolean hasPenaltiesAboutThisPlace(Place place)
+	{
+		for(Penalty p : penalties)
+		{
+			if(p.place != null)
+			{
+				if(p.place == place)
+				{
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
 	
 	public void changeScore(double amount)
 	{
+		System.out.println("Nation " + name + " : " + String.format("%.1f", score) + " -> " + String.format("%.1f", (score + amount)));
 		score += amount;
 	}
 	
@@ -147,6 +166,37 @@ public class Nation
 					return;
 				}
 			}
+		}
+	}
+
+
+	public void refreshPenalties()
+	{
+		ArrayList<Penalty> toRemove = new ArrayList<>();
+		for(Penalty p : penalties)
+		{
+			if(p.startTurn + p.duration < Manager.turnCount)
+			{
+				toRemove.add(p);
+			}
+			else if(p.place != null)
+			{
+				if(!places.contains(p.place))
+				{
+					System.out.println("lostTerrain");
+					toRemove.add(p);
+				}
+			}
+		}
+		
+		if(toRemove.size() > 0)
+		{
+			System.out.println(name + " removes " + toRemove.size() + " penalty(ies).");
+		}
+		
+		for(Penalty p : toRemove)
+		{
+			penalties.remove(p);
 		}
 	}
 }

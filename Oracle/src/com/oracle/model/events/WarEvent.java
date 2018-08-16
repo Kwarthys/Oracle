@@ -1,12 +1,17 @@
 package com.oracle.model.events;
 
+import com.oracle.manager.Manager;
 import com.oracle.model.HistoricEvent;
+import com.oracle.model.Nation;
+import com.oracle.model.Penalty;
 import com.oracle.model.Place;
 import com.oracle.utils.NationFinder;
 
 public class WarEvent extends HistoricEvent
 {
 	//private final String[] adverbs = {"gloriously", "awfully"}; //We must have two separate lists for attackers and defenders
+	
+	private static final int[] values = {2, 5, 10, 20};
 	
 	private NationFinder nationFinder;
 	private Place attacked;
@@ -15,6 +20,9 @@ public class WarEvent extends HistoricEvent
 	private int defenderID;
 	
 	private boolean success;
+	
+	private boolean attackHasPenalty = false;
+	private boolean defenseHasPenalty = false;
 	
 	//private String adverb;
 	
@@ -26,13 +34,16 @@ public class WarEvent extends HistoricEvent
 		
 		this.defenderID = attacked.owner;
 		
+		nationFinder.getNationById(attackerID).refreshPenalties();
+		nationFinder.getNationById(defenderID).refreshPenalties();
+		
 		resolveCombat();
 	}
 	
 	private void resolveCombat()
 	{
-		double attackerScore = Math.pow(nationFinder.getNationById(attackerID).getScore(), 1); //score raised to a certain power to tweak the softmax-ish rand
-		double defenderScore = Math.pow(nationFinder.getNationById(defenderID).getScore(), 1);
+		double attackerScore = nationFinder.getNationById(attackerID).getScore() - computeModifiers(attackerID);
+		double defenderScore = nationFinder.getNationById(defenderID).getScore() - computeModifiers(defenderID);
 		
 		double r = Math.random() * (attackerScore + defenderScore);
 		
@@ -42,7 +53,8 @@ public class WarEvent extends HistoricEvent
 		{
 			double defenderLoss = 2 * (attackerScore - r) / attackerScore;
 			nationFinder.getNationById(defenderID).changeScore(-defenderLoss);
-			
+			nationFinder.getNationById(defenderID).addNewPenalty(new Penalty(2, Manager.turnCount + 1));
+
 			nationFinder.getNationById(attackerID).changeScore(attacked.landValue);
 			
 			//this.adverb = adverbs[(int)(defenderLoss / 2 * (adverbs.length-1))];
@@ -51,8 +63,33 @@ public class WarEvent extends HistoricEvent
 		{
 			double attackerLoss = 2 * (r - attackerScore) / defenderScore;
 			nationFinder.getNationById(attackerID).changeScore(-attackerLoss);
+
+			nationFinder.getNationById(attackerID).addNewPenalty(new Penalty(2, Manager.turnCount + 1));
+			nationFinder.getNationById(defenderID).addNewPenalty(new Penalty(4, Manager.turnCount + 1, attacked));
 			
 			//this.adverb = adverbs[(int)(attackerLoss / 2 * (adverbs.length-1))];
+		}
+	}
+
+	private double computeModifiers(int nationID)
+	{
+		Nation n = nationFinder.getNationById(nationID);
+		
+		if(nationID == attackerID)
+		{
+			double penalty = penaltyAmount(n.getPenalties().size());
+			attackHasPenalty = penalty != 0;
+			return penalty;
+		}
+		else
+		{
+			int marks = n.getPenalties().size();
+			if(n.hasPenaltiesAboutThisPlace(attacked) && marks != 0)
+			{
+				marks -= 1;
+			}
+			defenseHasPenalty = marks != 0;
+			return penaltyAmount(marks);
 		}
 	}
 
@@ -71,15 +108,28 @@ public class WarEvent extends HistoricEvent
 		sb.append("(");
 		sb.append(String.format("%.1f", nationFinder.getNationById(attackerID).getScore()));
 		sb.append(")");
+		
+		if(attackHasPenalty)
+		{
+			sb.append("*");
+		}
+		
 		sb.append(" attacks ");
 		sb.append(attacked.name);
 		sb.append("(");
 		sb.append(String.format("%.2f", attacked.landValue));
-		sb.append(") of Nation ");
+		sb.append(")");
+		
+		sb.append("of Nation ");
 		sb.append(nationFinder.getNationById(defenderID).name);
 		sb.append("(");
 		sb.append(String.format("%.1f", nationFinder.getNationById(defenderID).getScore()));
 		sb.append(")");
+		
+		if(defenseHasPenalty)
+		{
+			sb.append("*");
+		}
 		
 		if(success)
 		{
@@ -100,5 +150,19 @@ public class WarEvent extends HistoricEvent
 		
 		
 		return sb.toString();
+	}
+	
+	private static double penaltyAmount(int marks)
+	{
+		if(marks == 0)
+			return 0;
+		if(marks < 5)
+		{
+			return values[marks];
+		}
+		else
+		{
+			return 20 + 20*Math.log10(marks - 3);
+		}
 	}
 }

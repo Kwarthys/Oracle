@@ -30,7 +30,7 @@ public class Manager {
 	
 	private NationFinder nationFinder;
 	
-	private int turnCount = 0;
+	public static int turnCount = 0;
 	
 	public Manager()
 	{
@@ -105,10 +105,17 @@ public class Manager {
 		window.registerListener(new Callback(){			
 			@Override
 			public void callback(){
-				drawWarEvent();
-				turnCount++;
+				playATurn();
 			}
 		});
+	}
+	
+	
+	private void playATurn()
+	{
+		System.out.println(turnCount);
+		drawWarEvent();
+		turnCount++;
 	}
 	
 	
@@ -140,7 +147,6 @@ public class Manager {
 		else
 		{
 			findNationByID(wanted.owner).addNewPenalty(new Penalty(3, turnCount, wanted)); //defender
-			protagonist.addNewPenalty(new Penalty(2, turnCount));
 		}
 			
 
