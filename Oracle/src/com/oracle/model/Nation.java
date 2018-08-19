@@ -55,7 +55,7 @@ public class Nation
 	
 	public void changeScore(double amount)
 	{
-		System.out.println("Nation " + name + " : " + String.format("%.1f", score) + " -> " + String.format("%.1f", (score + amount)));
+		//System.out.println("Nation " + name + " : " + String.format("%.1f", score) + " -> " + String.format("%.1f", (score + amount)));
 		score += amount;
 	}
 	

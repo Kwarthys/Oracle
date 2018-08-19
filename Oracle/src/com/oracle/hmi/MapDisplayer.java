@@ -1,19 +1,24 @@
 package com.oracle.hmi;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.util.ArrayList;
 
 import javax.swing.JPanel;
 
 import com.oracle.map.Terrain;
+import com.oracle.model.Nation;
 import com.oracle.model.Place;
+import com.oracle.utils.NationFinder;
 
 @SuppressWarnings("serial")
 public class MapDisplayer extends JPanel{
 
 	public int map[][];
 	private ArrayList<Place> places;
+	
+	public NationFinder nf = null;
 	
 	public MapDisplayer(int[][] map, ArrayList<Place> places)
 	{
@@ -28,6 +33,8 @@ public class MapDisplayer extends JPanel{
 	
 	public void paintComponent(Graphics g)
 	{
+		ArrayList<Integer> nationIDs = new ArrayList<>();
+		
 		for(int j = 0; j < 1000;j++)
 		{
 			for(int i = 0; i < 1000;i++)
@@ -37,10 +44,15 @@ public class MapDisplayer extends JPanel{
 				else 
 				{
 					g.setColor(new Color((int)(Math.pow(map[j][i],8)%255), (int)(Math.pow(map[j][i],6)%255) ,(int)(Math.pow(map[j][i],7)%255)));
+					if(!nationIDs.contains(map[j][i]))
+					{
+						nationIDs.add(map[j][i]);
+					}
 				}
 				g.fillRect(i, j, 1,1);
 			}
 		}
+		
 				
 		for(Place z : places)
 		{
@@ -53,5 +65,52 @@ public class MapDisplayer extends JPanel{
 				g.fillRect(boundaryPoint[1], boundaryPoint[0], 1,1);
 			}
 		}
+		
+		g.setFont(new Font("Arial", Font.BOLD, 18));
+		
+		if(nf != null)
+		{
+			for(Integer i : nationIDs)
+			{
+				int pointCount = 0;
+				
+				if(i == 1)
+				{
+					g.setColor(Color.white);
+				}
+				else
+				{
+					g.setColor(Color.BLACK);
+				}
+				
+				Nation n = nf.getNationById(i);
+				int[] center = {-1, -1};
+				
+				for(Place p : n.getPlaces())
+				{
+					int[] point = p.boundaries.get(0);
+					
+					if(center[0] == -1)//init
+					{
+						center[0] = point[0];
+						center[1] = point[1];
+					}
+					else
+					{
+						center[0] += point[0];
+						center[1] += point[1];
+					}
+					
+					pointCount++;
+				}
+
+				center[0] = center[0] / pointCount;
+				center[1] = center[1] / pointCount;
+				
+				g.drawString(n.name, center[1] - n.name.length() * 5, center[0]);
+			}
+		}
+		
+		
 	}
 }

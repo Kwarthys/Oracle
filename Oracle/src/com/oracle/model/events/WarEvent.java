@@ -24,6 +24,8 @@ public class WarEvent extends HistoricEvent
 	private boolean attackHasPenalty = false;
 	private boolean defenseHasPenalty = false;
 	
+	private String defenderName;
+	
 	//private String adverb;
 	
 	public WarEvent(NationFinder finder, Place attacked, int attackerID)
@@ -33,6 +35,8 @@ public class WarEvent extends HistoricEvent
 		this.attackerID = attackerID;
 		
 		this.defenderID = attacked.owner;
+
+		this.defenderName = nationFinder.getNationById(defenderID).name;
 		
 		nationFinder.getNationById(attackerID).refreshPenalties();
 		nationFinder.getNationById(defenderID).refreshPenalties();
@@ -59,7 +63,7 @@ public class WarEvent extends HistoricEvent
 			
 			//this.adverb = adverbs[(int)(defenderLoss / 2 * (adverbs.length-1))];
 		}
-		else
+		else //Attack failed
 		{
 			double attackerLoss = 2 * (r - attackerScore) / defenderScore;
 			nationFinder.getNationById(attackerID).changeScore(-attackerLoss);
@@ -121,9 +125,18 @@ public class WarEvent extends HistoricEvent
 		sb.append(")");
 		
 		sb.append("of Nation ");
-		sb.append(nationFinder.getNationById(defenderID).name);
+		sb.append(this.defenderName);
 		sb.append("(");
-		sb.append(String.format("%.1f", nationFinder.getNationById(defenderID).getScore()));
+		
+		if(nationFinder.getNationById(defenderID) == null)
+		{
+			sb.append("dead");
+		}
+		else
+		{
+			sb.append(String.format("%.1f", nationFinder.getNationById(defenderID).getScore()));	
+		}
+		
 		sb.append(")");
 		
 		if(defenseHasPenalty)

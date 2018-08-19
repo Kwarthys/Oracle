@@ -53,6 +53,8 @@ public class Manager {
 			}
 		};
 		
+		display.nf = this.nationFinder;
+		
 		startTheGame();
 	}
 
@@ -162,16 +164,25 @@ public class Manager {
 		place.owner = dest.getID();
 		src.getPlaces().remove(place);
 		dest.getPlaces().add(place);
+
+		int debugSavedID = -1;
+		String debugSavedName = "";
 		
 		terrainManager.repaintZone(place.lands, dest.getID());
+		
+		ArrayList<Integer> toRefresh = new ArrayList<>();
 
 		if(src.getPlaces().size() == 0)
 		{
 			this.nations.remove(src);
+			debugSavedID = src.getID();
+			debugSavedName = src.name;
+		}
+		else
+		{
+			toRefresh.add(src.getID());
 		}
 
-		ArrayList<Integer> toRefresh = new ArrayList<>();
-		toRefresh.add(src.getID());
 		toRefresh.add(dest.getID());
 		for(Place p : place.neighbours)
 		{
@@ -184,6 +195,10 @@ public class Manager {
 		for(Integer i : toRefresh)
 		{
 			Nation current = findNationByID(i);
+			if(current == null)
+			{
+				System.err.println("Failed to destroy " + debugSavedName + " id " + debugSavedID + " while trying to fetch " + i);
+			}
 			registerNewNeighborhood(current);
 			current.computeNewPlans();
 		}
@@ -206,7 +221,8 @@ public class Manager {
 		{
 			if(n.getID() == id)
 				return n;
-		}		
+		}
+		System.err.println("findNationByID returning NULL");
 		return null;
 	}
 
