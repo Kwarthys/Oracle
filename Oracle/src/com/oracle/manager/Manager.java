@@ -1,6 +1,7 @@
 package com.oracle.manager;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -123,8 +124,26 @@ public class Manager {
 	
 	private void drawWarEvent()
 	{
-		Nation protagonist;
+		Nation protagonist = null;
 		Random generator = new Random();
+		
+		ArrayList<Nation> copy = new ArrayList<>(nations);
+		Collections.shuffle(copy);
+		
+		for(int ni = 0; ni < copy.size() && protagonist == null; ni++)
+		{
+			Nation n = copy.get(ni);
+			if(n.getNeighbours().size() != 0)
+			{
+				protagonist = n;
+			}
+		}
+		
+		if(protagonist == null)
+		{
+			System.out.println("Nothing to do...");
+			return;
+		}
 		
 		do
 		{			
