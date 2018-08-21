@@ -1,8 +1,14 @@
 package com.oracle.hmi;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.font.FontRenderContext;
+import java.awt.font.TextLayout;
 import java.util.ArrayList;
 
 import javax.swing.JPanel;
@@ -31,8 +37,9 @@ public class MapDisplayer extends JPanel{
 	
 	
 	
-	public void paintComponent(Graphics g)
+	public void paintComponent(Graphics gd)
 	{
+		Graphics2D g = (Graphics2D)gd;
 		ArrayList<Integer> nationIDs = new ArrayList<>();
 		
 		for(int j = 0; j < 1000;j++)
@@ -66,15 +73,26 @@ public class MapDisplayer extends JPanel{
 			}
 		}
 		
-		g.setFont(new Font("Arial", Font.BOLD, 18));
-		
 		if(nf != null)
 		{
+			g.setFont(new Font("Arial", Font.PLAIN, 35));
+			
+	        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+	        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+	        
+	        g.setStroke(new BasicStroke(1.3f));
+			
+			FontRenderContext frc = g.getFontRenderContext();
+			
 			for(Integer i : nationIDs)
 			{
 				int pointCount = 0;
 				
-				if(i == 1)
+				Color countryColor = new Color((int)(Math.pow(i,8)%255), (int)(Math.pow(i,6)%255) ,(int)(Math.pow(i,7)%255));
+				boolean isTooDark = (countryColor.getRed() + countryColor.getBlue() + countryColor.getGreen()) / 3 < 30;
+				
+				if(isTooDark)
 				{
 					g.setColor(Color.white);
 				}
@@ -107,8 +125,19 @@ public class MapDisplayer extends JPanel{
 				center[0] = center[0] / pointCount;
 				center[1] = center[1] / pointCount;
 				
-				g.drawString(n.name, center[1] - n.name.length() * 5, center[0]);
+				center[1] -= n.name.length() * 10;
+	            TextLayout textTl = new TextLayout(n.name, g.getFont(), frc);
+	            Shape outline = textTl.getOutline(null);
+	            
+	            g.translate(center[1], center[0]);
+	            g.fill(outline);
+	            g.setColor(countryColor);
+	            g.draw(outline);
+	            g.translate(-center[1], -center[0]);
 			}
+			
+
+            g.dispose();
 		}
 		
 		
