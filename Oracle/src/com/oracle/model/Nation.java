@@ -57,6 +57,7 @@ public class Nation
 	{
 		//System.out.println("Nation " + name + " : " + String.format("%.1f", score) + " -> " + String.format("%.1f", (score + amount)));
 		score += amount;
+		score = Math.max(0, score);
 	}
 	
 	public void computeFirstScore()
@@ -167,6 +168,8 @@ public class Nation
 				}
 			}
 		}
+		
+		penalties.add(penalty);
 	}
 
 

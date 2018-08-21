@@ -11,7 +11,7 @@ public class WarEvent extends HistoricEvent
 {
 	//private final String[] adverbs = {"gloriously", "awfully"}; //We must have two separate lists for attackers and defenders
 	
-	private static final int[] values = {2, 5, 10, 20};
+	private static final int[] values = {0, 2, 5, 10, 20};
 	
 	private NationFinder nationFinder;
 	private Place attacked;
@@ -167,8 +167,6 @@ public class WarEvent extends HistoricEvent
 	
 	private static double penaltyAmount(int marks)
 	{
-		if(marks == 0)
-			return 0;
 		if(marks < 5)
 		{
 			return values[marks];
