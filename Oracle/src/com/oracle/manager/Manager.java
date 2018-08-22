@@ -1,17 +1,15 @@
 package com.oracle.manager;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 import com.oracle.hmi.MapDisplayer;
 import com.oracle.hmi.Window;
 import com.oracle.map.Terrain;
 import com.oracle.model.Actor;
-import com.oracle.model.Penalty;
 import com.oracle.model.Nation;
+import com.oracle.model.Penalty;
 import com.oracle.model.Place;
 import com.oracle.model.Zone;
 import com.oracle.model.events.WarEvent;
@@ -125,41 +123,20 @@ public class Manager {
 	private void drawWarEvent()
 	{
 		Nation protagonist = null;
-		Random generator = new Random();
 		
-		ArrayList<Nation> copy = new ArrayList<>(nations);
-		Collections.shuffle(copy);
-		
-		for(int ni = 0; ni < copy.size() && protagonist == null; ni++)
-		{
-			Nation n = copy.get(ni);
-			if(n.getNeighbours().size() != 0)
-			{
-				protagonist = n;
-			}
-		}
-		
-		if(protagonist == null)
-		{
-			System.out.println("Nothing to do...");
-			return;
-		}
-		
-		do
-		{			
-			int nationIndexOne = generator.nextInt(nations.size());
-			protagonist = nations.get(nationIndexOne);			
-		}while(protagonist.getNeighbours().size() == 0);
+		protagonist = nations.get(turnCount % nations.size());
 		
 		Place wanted = protagonist.getPlans();
+		
 		if(wanted == null)
 		{
-			System.err.println("No eligible places");
+			System.out.println(protagonist.getQuickDescriptor() + " is peacefull (or forced to be).");
+			protagonist.changeScore(1);
 			return;
 		}	
 
 
-		WarEvent w = new WarEvent(nationFinder, wanted, protagonist.getID());
+		WarEvent w = new WarEvent(wanted, protagonist);
 
 		if(w.getSuccess())
 		{
@@ -167,7 +144,7 @@ public class Manager {
 		}
 		else
 		{
-			findNationByID(wanted.owner).addNewPenalty(new Penalty(3, turnCount, wanted)); //defender
+			wanted.owner.addNewPenalty(new Penalty(3, turnCount, wanted)); //defender
 		}
 			
 
@@ -179,8 +156,8 @@ public class Manager {
 	
 	private void switchProperty(Place place, Nation dest)
 	{
-		Nation src = findNationByID(place.owner);
-		place.owner = dest.getID();
+		Nation src = place.owner;
+		place.owner = dest;
 		src.getPlaces().remove(place);
 		dest.getPlaces().add(place);
 
@@ -189,7 +166,7 @@ public class Manager {
 		
 		terrainManager.repaintZone(place.lands, dest.getID());
 		
-		ArrayList<Integer> toRefresh = new ArrayList<>();
+		ArrayList<Nation> toRefresh = new ArrayList<>();
 
 		if(src.getPlaces().size() == 0)
 		{
@@ -199,10 +176,10 @@ public class Manager {
 		}
 		else
 		{
-			toRefresh.add(src.getID());
+			toRefresh.add(src);
 		}
 
-		toRefresh.add(dest.getID());
+		toRefresh.add(dest);
 		for(Place p : place.neighbours)
 		{
 			if(!toRefresh.contains(p.owner))
@@ -211,15 +188,14 @@ public class Manager {
 			}
 		}
 		
-		for(Integer i : toRefresh)
+		for(Nation i : toRefresh)
 		{
-			Nation current = findNationByID(i);
-			if(current == null)
+			if(i == null)
 			{
 				System.err.println("Failed to destroy " + debugSavedName + " id " + debugSavedID + " while trying to fetch " + i);
 			}
-			registerNewNeighborhood(current);
-			current.computeNewPlans();
+			registerNewNeighborhood(i);
+			i.computeNewPlans();
 		}
 		
 	}
@@ -227,9 +203,9 @@ public class Manager {
 	private void registerNewNeighborhood(Nation n)
 	{
 		ArrayList<Nation> neighbours = new ArrayList<>();		
-		for(Integer id : n.getNeighborhood())
+		for(Nation ni : n.getNeighborhood())
 		{
-			neighbours.add(findNationByID(id));
+			neighbours.add(ni);
 		}		
 		n.setNeighbours(neighbours);
 	}
@@ -241,7 +217,7 @@ public class Manager {
 			if(n.getID() == id)
 				return n;
 		}
-		System.err.println("findNationByID returning NULL");
+		System.err.println("findNationByID returning NULL " + id);
 		return null;
 	}
 
@@ -253,8 +229,8 @@ public class Manager {
 		for(Zone z : zones)
 		{
 			Nation n = new Nation(new ArrayList<Actor>(), NameGenerator.getRandomName(), z.getID());
-			n.setPlaces(createPlaces(hashMap.get(z.getID()), z.getID()));
 			nations.add(n);
+			n.setPlaces(createPlaces(hashMap.get(z.getID()), z.getID()));
 		}
 		
 		/*** Managing Nation neighbourhood then computing their starting score ***/
@@ -293,7 +269,7 @@ public class Manager {
 		{
 			Zone z = getAtomicZoneByZoneID(zoneID);
 			Place daPlace = new Place(z.getLands(), z.getBoundaries(), z.getID(), Math.random(), NameGenerator.getRandomName());
-			daPlace.owner = ownerId;
+			daPlace.owner = findNationByID(ownerId);
 			daPlace.seaAccess = this.terrainManager.hasSeaAccess(z);
 			places.add(daPlace);
 			this.places.add(daPlace);

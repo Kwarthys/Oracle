@@ -16,7 +16,7 @@ public class Place {
 	
 	public String name;
 	
-	public int owner;
+	public Nation owner;
 	
 	private int zoneID;
 	

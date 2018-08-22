@@ -1,6 +1,7 @@
 package com.oracle.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import com.oracle.manager.Manager;
 
@@ -18,6 +19,13 @@ public class Nation
 	
 	private ArrayList<Penalty> penalties = new ArrayList<>();
 	
+	private HashMap<Nation, Integer> standings = new HashMap<>();
+			
+	/*** nation stats ***/
+	private int aggressivity;
+	private int diplomaty;
+	private int trust;
+	
 	public Nation(ArrayList<Actor> actors, String name, int id)
 	{
 		this.actors = new ArrayList<>(actors);
@@ -25,6 +33,10 @@ public class Nation
 		this.id = id;
 		
 		this.name = name;
+
+		this.aggressivity = (int) (Math.random() * 100); // [ 0 : 100 [
+		this.diplomaty = (int) (Math.random() * 100);
+		this.trust = (int) (Math.random() * 100);
 	}
 	
 	
@@ -94,7 +106,7 @@ public class Nation
 		{
 			for(Place v : p.neighbours)
 			{
-				if(v.owner == targetId)
+				if(v.owner.getID() == targetId)
 				{
 					places.add(v);
 				}
@@ -105,15 +117,15 @@ public class Nation
 	}
 
 
-	public ArrayList<Integer> getNeighborhood()
+	public ArrayList<Nation> getNeighborhood()
 	{
-		ArrayList<Integer> voisins = new ArrayList<>();
+		ArrayList<Nation> voisins = new ArrayList<>();
 		
 		for(Place p : this.places)
 		{
 			for(Place v : p.neighbours)
 			{
-				if(!voisins.contains(v.owner) && v.owner != getID())
+				if(!voisins.contains(v.owner) && v.owner.getID() != getID())
 				{
 					voisins.add(v.owner);
 				}
@@ -134,18 +146,21 @@ public class Nation
 		{
 			for(Place v : p.neighbours)
 			{
-				if(v.owner != getID())
+				if(v.owner.getID() != getID())
 				{
-					if(placeWanted == null)
-						placeWanted = v;
-					
-					else if(v.landValue > placeWanted.landValue)
+					if(v.owner.score < this.score * ( 1 + 0.01 * this.aggressivity))
 					{
-						placeWanted = v;
+						if(placeWanted == null)
+							placeWanted = v;
+
+						else if(v.landValue > placeWanted.landValue)
+						{
+							placeWanted = v;
+						}
 					}
 				}
 			}
-		}		
+		}
 	}
 
 
@@ -186,20 +201,29 @@ public class Nation
 			{
 				if(!places.contains(p.place))
 				{
-					System.out.println("lostTerrain");
 					toRemove.add(p);
 				}
 			}
-		}
-		
-		if(toRemove.size() > 0)
-		{
-			System.out.println(name + " removes " + toRemove.size() + " penalty(ies).");
 		}
 		
 		for(Penalty p : toRemove)
 		{
 			penalties.remove(p);
 		}
+	}
+	
+	public String getQuickDescriptor()
+	{
+		StringBuffer sb = new StringBuffer();
+		
+		sb.append("Nation ");
+		sb.append(this.name);
+		sb.append("(");
+		sb.append(this.aggressivity);
+		sb.append(", ");
+		sb.append(String.format("%.1f", this.getScore()));
+		sb.append(")");
+		
+		return sb.toString();
 	}
 }
