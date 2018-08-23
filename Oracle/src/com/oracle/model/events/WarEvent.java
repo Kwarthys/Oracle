@@ -5,12 +5,11 @@ import com.oracle.model.HistoricEvent;
 import com.oracle.model.Nation;
 import com.oracle.model.Penalty;
 import com.oracle.model.Place;
+import com.oracle.model.Standing;
 
 public class WarEvent extends HistoricEvent
 {
 	//private final String[] adverbs = {"gloriously", "awfully"}; //We must have two separate lists for attackers and defenders
-	
-	private static final int[] values = {0, 2, 5, 10, 20};
 	private Place attacked;
 	
 	private Nation attacker;
@@ -34,16 +33,16 @@ public class WarEvent extends HistoricEvent
 
 		this.defenderName = defender.name;
 		
-		attacker.refreshPenalties();
-		defender.refreshPenalties();
+		attacker.update();
+		defender.update();
 		
 		resolveCombat();
 	}
 	
 	private void resolveCombat()
 	{
-		double attackerScore = attacker.getScore() - computeModifiers(attacker);
-		double defenderScore = defender.getScore() - computeModifiers(defender);
+		double attackerScore = attacker.getScore() * (1 - computeModifiers(attacker) / 100);
+		double defenderScore = defender.getScore() * (1 - computeModifiers(defender) / 100);
 		
 		double r = Math.random() * (attackerScore + defenderScore);
 		
@@ -54,7 +53,7 @@ public class WarEvent extends HistoricEvent
 			double defenderLoss = 2 * (attackerScore - r) / attackerScore;
 			defender.changeScore(-defenderLoss);
 			defender.addNewPenalty(new Penalty(2, Manager.turnCount + 1));
-
+			
 			attacker.changeScore(attacked.landValue);
 			
 			//this.adverb = adverbs[(int)(defenderLoss / 2 * (adverbs.length-1))];
@@ -62,6 +61,7 @@ public class WarEvent extends HistoricEvent
 		else //Attack failed
 		{
 			double attackerLoss = 2 * (r - attackerScore) / defenderScore;
+
 			attacker.changeScore(-attackerLoss);
 
 			attacker.addNewPenalty(new Penalty(2, Manager.turnCount + 1));
@@ -69,6 +69,9 @@ public class WarEvent extends HistoricEvent
 			
 			//this.adverb = adverbs[(int)(attackerLoss / 2 * (adverbs.length-1))];
 		}
+		
+		attacker.updateStandingAbout(defender, Standing.TERRIROTY_WANTED);
+		defender.updateStandingAbout(attacker, Standing.ATTACK);
 	}
 
 	private double computeModifiers(Nation nation)
@@ -77,7 +80,7 @@ public class WarEvent extends HistoricEvent
 		
 		if(nation == attacker)
 		{
-			double penalty = penaltyAmount(n.getPenalties().size());
+			double penalty = Penalty.penaltyAmount(n.getPenalties().size());
 			attackHasPenalty = penalty != 0;
 			return penalty;
 		}
@@ -89,7 +92,7 @@ public class WarEvent extends HistoricEvent
 				marks -= 1;
 			}
 			defenseHasPenalty = marks != 0;
-			return penaltyAmount(marks);
+			return Penalty.penaltyAmount(marks);
 		}
 	}
 
@@ -155,17 +158,5 @@ public class WarEvent extends HistoricEvent
 		
 		
 		return sb.toString();
-	}
-	
-	private static double penaltyAmount(int marks)
-	{
-		if(marks < 5)
-		{
-			return values[marks];
-		}
-		else
-		{
-			return 20 + 20*Math.log10(marks - 3);
-		}
 	}
 }

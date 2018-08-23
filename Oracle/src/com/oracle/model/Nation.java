@@ -19,7 +19,7 @@ public class Nation
 	
 	private ArrayList<Penalty> penalties = new ArrayList<>();
 	
-	private HashMap<Nation, Integer> standings = new HashMap<>();
+	private HashMap<Nation, Standing> standings = new HashMap<>();
 			
 	/*** nation stats ***/
 	private int aggressivity;
@@ -48,6 +48,14 @@ public class Nation
 	public double getScore() {return score;}
 	public ArrayList<Penalty> getPenalties(){return penalties;}
 	
+	public void updateStandingAbout(Nation about, int amount)
+	{
+		if(standings.containsKey(about))
+		{
+			standings.get(about).addModifier(amount);
+		}
+	}
+	
 	public boolean hasPenaltiesAboutThisPlace(Place place)
 	{
 		for(Penalty p : penalties)
@@ -67,9 +75,9 @@ public class Nation
 	
 	public void changeScore(double amount)
 	{
-		//System.out.println("Nation " + name + " : " + String.format("%.1f", score) + " -> " + String.format("%.1f", (score + amount)));
+		//System.out.println("Nation " + name + " : " + String.format("%.1f", score) + " -> " + String.format("%.1f", (score + amount)) + " (+" + amount + ")");
 		score += amount;
-		score = Math.max(0, score);
+		score = Math.max(0.1, score);
 	}
 	
 	public void computeFirstScore()
@@ -117,7 +125,7 @@ public class Nation
 	}
 
 
-	public ArrayList<Nation> getNeighborhood()
+	public void registerNewNeighborhood()
 	{
 		ArrayList<Nation> voisins = new ArrayList<>();
 		
@@ -132,7 +140,15 @@ public class Nation
 			}
 		}
 		
-		return voisins;
+		for(Nation n : voisins)
+		{
+			if(!standings.containsKey(n))
+			{
+				standings.put(n, new Standing());
+			}
+		}
+		
+		this.neighbours = voisins;
 	}
 
 	
@@ -142,25 +158,39 @@ public class Nation
 	public void computeNewPlans()
 	{
 		placeWanted = null;
-		for(Place p : this.places)
-		{
-			for(Place v : p.neighbours)
-			{
-				if(v.owner.getID() != getID())
-				{
-					if(v.owner.score < this.score * ( 1 + 0.01 * this.aggressivity))
-					{
-						if(placeWanted == null)
-							placeWanted = v;
 
-						else if(v.landValue > placeWanted.landValue)
-						{
-							placeWanted = v;
+		for(Nation n : neighbours)
+		{
+			double nationActualScore = n.score * Penalty.penaltyAmount(n.getPenalties().size()) / 100;
+
+			int nationStandings = standings.get(n).getCurrentStanding();
+
+			if(nationStandings > 2 * this.aggressivity - 120)//Wants to attack
+			{
+				for(Place p : this.places)
+				{
+					for(Place v : p.neighbours)
+					{
+						if(v.owner.getID() == n.getID())
+						{							
+							if(nationActualScore < this.score * ( 1 + 0.01 * this.aggressivity)) //Can Attack
+							{
+								if(placeWanted == null)
+									placeWanted = v;
+
+								else if(v.landValue > placeWanted.landValue)
+								{
+									placeWanted = v;
+								}
+							}
+
 						}
 					}
 				}
+				return; //If nation decided to attack another nation, it won't look its other neighbors;
 			}
 		}
+
 	}
 
 
@@ -187,8 +217,19 @@ public class Nation
 		penalties.add(penalty);
 	}
 
+	
+	public void update()
+	{
+		updateStandings();
+		updatePenalties();
+	}
+	
+	private void updateStandings()
+	{
+		standings.forEach((k, v) -> v.refresh());
+	}
 
-	public void refreshPenalties()
+	private void updatePenalties()
 	{
 		ArrayList<Penalty> toRemove = new ArrayList<>();
 		for(Penalty p : penalties)
@@ -225,5 +266,14 @@ public class Nation
 		sb.append(")");
 		
 		return sb.toString();
+	}
+
+
+	public void printStandings()
+	{
+		System.out.println("\nStandings of " + getQuickDescriptor());
+		standings.forEach((k, v) -> {
+			System.out.println("about " + k.getQuickDescriptor() + " : " + v.getCurrentStanding() + ".");
+		});
 	}
 }

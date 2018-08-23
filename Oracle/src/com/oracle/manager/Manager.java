@@ -9,7 +9,6 @@ import com.oracle.hmi.Window;
 import com.oracle.map.Terrain;
 import com.oracle.model.Actor;
 import com.oracle.model.Nation;
-import com.oracle.model.Penalty;
 import com.oracle.model.Place;
 import com.oracle.model.Zone;
 import com.oracle.model.events.WarEvent;
@@ -100,6 +99,7 @@ public class Manager {
 	{
 		for(Nation n : nations)
 		{
+			n.registerNewNeighborhood();
 			n.computeNewPlans();
 		}
 		
@@ -107,6 +107,12 @@ public class Manager {
 			@Override
 			public void callback(){
 				playATurn();
+			}
+		},
+		new Callback() {
+			@Override
+			public void callback() {
+				showStandings();
 			}
 		});
 	}
@@ -119,6 +125,13 @@ public class Manager {
 		turnCount++;
 	}
 	
+	private void showStandings()
+	{
+		for(Nation n : nations)
+		{
+			n.printStandings();
+		}
+	}
 	
 	private void drawWarEvent()
 	{
@@ -141,10 +154,6 @@ public class Manager {
 		if(w.getSuccess())
 		{
 			switchProperty(wanted, protagonist);
-		}
-		else
-		{
-			wanted.owner.addNewPenalty(new Penalty(3, turnCount, wanted)); //defender
 		}
 			
 
@@ -194,20 +203,10 @@ public class Manager {
 			{
 				System.err.println("Failed to destroy " + debugSavedName + " id " + debugSavedID + " while trying to fetch " + i);
 			}
-			registerNewNeighborhood(i);
+			i.registerNewNeighborhood();
 			i.computeNewPlans();
 		}
 		
-	}
-	
-	private void registerNewNeighborhood(Nation n)
-	{
-		ArrayList<Nation> neighbours = new ArrayList<>();		
-		for(Nation ni : n.getNeighborhood())
-		{
-			neighbours.add(ni);
-		}		
-		n.setNeighbours(neighbours);
 	}
 	
 	public Nation findNationByID(int id)

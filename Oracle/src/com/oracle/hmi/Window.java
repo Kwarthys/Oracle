@@ -57,7 +57,7 @@ public class Window extends JFrame
 	*/
 
 	
-	public void registerListener(Callback cb)
+	public void registerListener(Callback cb, Callback scb)
 	{
 		this.addKeyListener(new KeyListener() {
 			
@@ -74,6 +74,10 @@ public class Window extends JFrame
 				{
 					cb.callback();
 					repaint();
+				}
+				else if(e.getKeyCode() == KeyEvent.VK_S)
+				{
+					scb.callback();
 				}
 			}
 		});
