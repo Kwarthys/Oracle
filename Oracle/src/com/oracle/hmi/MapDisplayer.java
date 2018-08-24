@@ -91,13 +91,13 @@ public class MapDisplayer extends JPanel{
 		
 		if(nf != null)
 		{
-			g.setFont(new Font("Arial", Font.PLAIN, 35 * zoomCoef));
+			g.setFont(new Font("Arial", Font.BOLD, 35 * zoomCoef));
 			
 	        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
 	        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 	        
-	        g.setStroke(new BasicStroke(1.3f));
+	        g.setStroke(new BasicStroke(2f));
 			
 			FontRenderContext frc = g.getFontRenderContext();
 			
@@ -108,13 +108,15 @@ public class MapDisplayer extends JPanel{
 				Color countryColor = new Color((int)(Math.pow(i,8)%255), (int)(Math.pow(i,6)%255) ,(int)(Math.pow(i,7)%255));
 				boolean isTooDark = (countryColor.getRed() + countryColor.getBlue() + countryColor.getGreen()) / 3 < 30;
 				
+				Color fillColor;
+				
 				if(isTooDark)
 				{
-					g.setColor(Color.white);
+					fillColor = Color.white;
 				}
 				else
 				{
-					g.setColor(Color.BLACK);
+					fillColor = Color.BLACK;
 				}
 				
 				Nation n = nf.getNationById(i);
@@ -146,6 +148,7 @@ public class MapDisplayer extends JPanel{
 	            Shape outline = textTl.getOutline(null);
 	            
 	            g.translate(center[1] * zoomCoef + xOffset, center[0] * zoomCoef + yOffset);
+	            g.setColor(fillColor);
 	            g.fill(outline);
 	            g.setColor(countryColor);
 	            g.draw(outline);

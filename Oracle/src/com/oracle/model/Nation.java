@@ -23,8 +23,8 @@ public class Nation
 			
 	/*** nation stats ***/
 	private int aggressivity;
-	private int diplomaty;
-	private int trust;
+	//private int diplomaty;
+	//private int trust;
 	
 	public Nation(ArrayList<Actor> actors, String name, int id)
 	{
@@ -35,8 +35,8 @@ public class Nation
 		this.name = name;
 
 		this.aggressivity = (int) (Math.random() * 100); // [ 0 : 100 [
-		this.diplomaty = (int) (Math.random() * 100);
-		this.trust = (int) (Math.random() * 100);
+		//this.diplomaty = (int) (Math.random() * 100);
+		//this.trust = (int) (Math.random() * 100);
 	}
 	
 	
@@ -165,7 +165,7 @@ public class Nation
 
 			int nationStandings = standings.get(n).getCurrentStanding();
 
-			if(nationStandings > 2 * this.aggressivity - 120)//Wants to attack
+			if(nationStandings < 2 * this.aggressivity - 120)//Wants to attack
 			{
 				for(Place p : this.places)
 				{
