@@ -76,7 +76,7 @@ public class Window extends JFrame
 			    	   if(!sim.zoomed)
 			    	   {
 				    	   sim.zoomed = true;
-				    	   repaint();
+						sim.updateGraphics();
 				    	   System.out.println("Zooming");
 			    	   }
 			       }
@@ -85,7 +85,7 @@ public class Window extends JFrame
 			    	   if(sim.zoomed)
 			    	   {
 				    	   sim.zoomed = false;
-				    	   repaint();
+				    	   sim.updateGraphics();
 				    	   System.out.println("Zooming out");
 			    	   }
 			       }				
@@ -135,7 +135,6 @@ public class Window extends JFrame
 				if(e.getKeyCode() == KeyEvent.VK_ENTER)
 				{
 					cb.callback();
-					repaint();
 				}
 				else if(e.getKeyCode() == KeyEvent.VK_S)
 				{

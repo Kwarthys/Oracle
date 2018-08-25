@@ -13,7 +13,6 @@ import com.oracle.model.Place;
 import com.oracle.model.Zone;
 import com.oracle.model.events.WarEvent;
 import com.oracle.utils.Callback;
-import com.oracle.utils.NationFinder;
 import com.oracle.utils.generators.NameGenerator;
 
 public class Manager {
@@ -26,8 +25,6 @@ public class Manager {
 	
 	private Terrain terrainManager;
 	
-	private NationFinder nationFinder;
-	
 	public static int turnCount = 0;
 	
 	public Manager()
@@ -39,19 +36,9 @@ public class Manager {
 		
 		computePlacesNeighbours();
 		
-		int[][] map = terrainManager.getMap();
-		
-		display = new MapDisplayer(map, this.places);
+		display = new MapDisplayer(terrainManager.getMap(), this.nations);
+		display.updateGraphics();
 		window = new Window(display);
-		
-		this.nationFinder = new NationFinder() {			
-			@Override
-			public Nation getNationById(int nationID) {
-				return findNationByID(nationID);
-			}
-		};
-		
-		display.nf = this.nationFinder;
 		
 		startTheGame();
 	}
@@ -173,7 +160,8 @@ public class Manager {
 		int debugSavedID = -1;
 		String debugSavedName = "";
 		
-		terrainManager.repaintZone(place.lands, dest.getID());
+		terrainManager.repaintZone(place.lands, dest.getID());		
+		display.repaintPlace(place, src);
 		
 		ArrayList<Nation> toRefresh = new ArrayList<>();
 
