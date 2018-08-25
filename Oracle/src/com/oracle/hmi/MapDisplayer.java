@@ -15,14 +15,22 @@ import java.util.ArrayList;
 
 import javax.swing.JPanel;
 
+import com.oracle.map.Terrain;
 import com.oracle.model.Nation;
 import com.oracle.model.Place;
 
 @SuppressWarnings("serial")
 public class MapDisplayer extends JPanel{
+	
+	private static final int zoomAmount = 3;
 
 	private BufferedImage image;
+
+	private BufferedImage waterLayer;
+	private BufferedImage zoomedWaterLayer;
+	
 	private ArrayList<Nation> nations;
+	
 
 	private int[][] map;
 
@@ -36,10 +44,47 @@ public class MapDisplayer extends JPanel{
 		super();
 
 		this.map = map;
+		
+		createWaterLayers();
 
-		this.nations = new ArrayList<>(nations);
+		this.nations = nations;
 		
 		updateGraphics();
+	}
+	
+	private void createWaterLayers()
+	{
+		int height = map.length;
+		int width = map[0].length;
+
+		this.waterLayer = new BufferedImage(width, height,  BufferedImage.TYPE_4BYTE_ABGR);
+		this.zoomedWaterLayer = new BufferedImage(width * zoomAmount, height * zoomAmount,  BufferedImage.TYPE_4BYTE_ABGR);
+		
+		Graphics2D g = (Graphics2D) waterLayer.getGraphics();
+		Graphics2D zg = (Graphics2D) zoomedWaterLayer.getGraphics();
+		
+		for(int j = 0; j < map.length; j++)
+		{
+			for(int i = 0; i < map[0].length; i++)
+			{
+				Color color;
+				
+				if(map[j][i] == Terrain.SEA_CODE || map[j][i] == Terrain.WATER_CODE)
+				{
+					color = Color.CYAN;
+				}
+				else
+				{
+					color = new Color(0,0,0,0); // transparent
+				}
+
+				g.setColor(color);
+				zg.setColor(color);
+				
+				g.fillRect(i, j, 1, 1);
+				zg.fillRect(i*zoomAmount, j*zoomAmount, zoomAmount, zoomAmount);
+			}
+		}
 	}
 
 
@@ -63,7 +108,7 @@ public class MapDisplayer extends JPanel{
 		int height = map.length;
 		int width = map[0].length;
 
-		int zoomCoef = this.zoomed ? 3 : 1;
+		int zoomCoef = this.zoomed ? zoomAmount : 1;
 
 		this.image = new BufferedImage(width * zoomCoef, height * zoomCoef, BufferedImage.TYPE_3BYTE_BGR);
 
@@ -82,9 +127,11 @@ public class MapDisplayer extends JPanel{
 
 		for(Nation n : nations)
 		{
-			g.setStroke(defaultStroke);
 			paintNation(n, g);
+			g.setStroke(defaultStroke);
 		}
+
+		paintTheNames();
 
 
 		g.dispose();
@@ -93,30 +140,12 @@ public class MapDisplayer extends JPanel{
 	}
 
 	private void paintNation(Nation n, Graphics2D g)
-	{
-		Stroke countryNameStroke = new BasicStroke(2f);
-		FontRenderContext frc = g.getFontRenderContext();
-		
-		int zoomCoef = this.zoomed ? 3 : 1;
-		int placeCount = 0;
-		
-		int[] countryCenter = {-1,-1};
+	{		
+		int zoomCoef = this.zoomed ? zoomAmount : 1;
 		
 		int i = n.getID();
 
 		Color countryColor = new Color((int)(Math.pow(i,8)%255), (int)(Math.pow(i,6)%255) ,(int)(Math.pow(i,7)%255));
-		boolean isTooDark = (countryColor.getRed() + countryColor.getBlue() + countryColor.getGreen()) / 3 < 30;
-
-		Color nameFillColor;
-
-		if(isTooDark)
-		{
-			nameFillColor = Color.white;
-		}
-		else
-		{
-			nameFillColor = Color.BLACK;
-		}
 
 		for(Place p : n.getPlaces())
 		{
@@ -134,79 +163,159 @@ public class MapDisplayer extends JPanel{
 			{				
 				g.fillRect(boundaryPoint[1] * zoomCoef, boundaryPoint[0] * zoomCoef, zoomCoef, zoomCoef);
 			}
-		}
+		}		
+	}
+	
+	private void paintTheNames()
+	{
+		Stroke countryNameStroke = new BasicStroke(2f);
+		int zoomCoef = this.zoomed ? zoomAmount : 1;
 		
-		for(Place p : n.getPlaces())
-		{			
-			int[] center = {-1, -1};
-			if(zoomed)
-			{				
-				int pointCount = 0;
-				
-				for(int[] land : p.lands)
-				{
-					if(center[0] == -1)//init
+		Graphics2D g = (Graphics2D) image.getGraphics();
+		FontRenderContext frc = g.getFontRenderContext();
+		Stroke defaultStroke = g.getStroke();
+		
+		for(Nation n : nations)
+		{
+			int placeCount = 0;
+			
+			int[] countryCenter = {-1,-1};
+			
+			int i = n.getID();
+
+			Color countryColor = new Color((int)(Math.pow(i,8)%255), (int)(Math.pow(i,6)%255) ,(int)(Math.pow(i,7)%255));
+			boolean isTooDark = (countryColor.getRed() + countryColor.getBlue() + countryColor.getGreen()) / 3 < 30;
+
+			Color nameFillColor;
+
+			if(isTooDark)
+			{
+				nameFillColor = Color.white;
+			}
+			else
+			{
+				nameFillColor = Color.BLACK;
+			}
+			
+			for(Place p : n.getPlaces())
+			{			
+				int[] center = {-1, -1};
+				if(zoomed)
+				{				
+					int pointCount = 0;
+					
+					for(int[] land : p.lands)
 					{
-						center[0] = land[0];
-						center[1] = land[1];
+						if(center[0] == -1)//init
+						{
+							center[0] = land[0];
+							center[1] = land[1];
+						}
+						else
+						{
+							center[0] += land[0];
+							center[1] += land[1];
+						}
+						pointCount++;
 					}
-					else
-					{
-						center[0] += land[0];
-						center[1] += land[1];
-					}
-					pointCount++;
+
+					center[0] = center[0] / pointCount;
+					center[1] = center[1] / pointCount;
+					
+					g.setColor(nameFillColor);
+					g.drawString(p.name, (center[1] - (int)(p.name.length() * 1.5)) * zoomCoef, (center[0] + 3) * zoomCoef);
 				}
-
-				center[0] = center[0] / pointCount;
-				center[1] = center[1] / pointCount;
+				else
+				{
+					center[0] = p.lands.get(0)[0];
+					center[1] = p.lands.get(0)[1];
+				}
 				
-				g.setColor(nameFillColor);
-				g.drawString(p.name, (center[1] - (int)(p.name.length() * 1.5)) * zoomCoef, (center[0] + 3) * zoomCoef);
-			}
-			else
-			{
-				center[0] = p.lands.get(0)[0];
-				center[1] = p.lands.get(0)[1];
+				placeCount++;
+				
+				if(countryCenter[0] == -1)//init
+				{
+					countryCenter[0] = center[0];
+					countryCenter[1] = center[1];
+				}
+				else
+				{
+					countryCenter[0] += center[0];
+					countryCenter[1] += center[1];
+				}
 			}
 			
-			placeCount++;
+			g.setStroke(countryNameStroke);
+
+			countryCenter[0] = countryCenter[0] / placeCount;
+			countryCenter[1] = countryCenter[1] / placeCount;
+
+			countryCenter[1] -= n.name.length() * 10;
+			TextLayout textTl = new TextLayout(n.name, new Font("Arial", Font.BOLD, 35 * zoomCoef), frc);
+			Shape outline = textTl.getOutline(null);
+
+			g.translate(countryCenter[1] * zoomCoef, countryCenter[0] * zoomCoef);
+			g.setColor(nameFillColor);
+			g.fill(outline);
+			g.setColor(countryColor);
+			g.draw(outline);
+			g.translate(-(countryCenter[1] * zoomCoef), -(countryCenter[0] * zoomCoef));
 			
-			if(countryCenter[0] == -1)//init
-			{
-				countryCenter[0] = center[0];
-				countryCenter[1] = center[1];
-			}
-			else
-			{
-				countryCenter[0] += center[0];
-				countryCenter[1] += center[1];
-			}
+			g.setStroke(defaultStroke);
 		}
-		
-		g.setStroke(countryNameStroke);
-
-		countryCenter[0] = countryCenter[0] / placeCount;
-		countryCenter[1] = countryCenter[1] / placeCount;
-
-		countryCenter[1] -= n.name.length() * 10;
-		TextLayout textTl = new TextLayout(n.name, new Font("Arial", Font.BOLD, 35 * zoomCoef), frc);
-		Shape outline = textTl.getOutline(null);
-
-		g.translate(countryCenter[1] * zoomCoef, countryCenter[0] * zoomCoef);
-		g.setColor(nameFillColor);
-		g.fill(outline);
-		g.setColor(countryColor);
-		g.draw(outline);
-		g.translate(-(countryCenter[1] * zoomCoef), -(countryCenter[0] * zoomCoef));
 	}
 
 
 
 	public void repaintPlace(Place place, Nation oldNation)
 	{
-		paintNation(oldNation, (Graphics2D)image.getGraphics());
-		paintNation(place.owner, (Graphics2D)image.getGraphics());
+		ArrayList<Nation> toRepaint = new ArrayList<>();
+		if(nations.contains(oldNation))
+		{
+			toRepaint.add(oldNation);
+			for(Nation n : oldNation.getNeighbours())
+			{
+				toRepaint.add(n);
+			}
+		}
+		
+		toRepaint.add(place.owner);
+		
+		for(Nation n : place.owner.getNeighbours())
+		{
+			if(!toRepaint.contains(n))
+			{
+				toRepaint.add(n);
+			}
+		}
+		
+		Graphics2D g = (Graphics2D) image.getGraphics();
+		
+		for(Nation n : toRepaint)
+		{
+			paintNation(n, g);
+		}
+		
+		applyWaterMask();
+		
+		paintTheNames();
+		
 		repaint();
+	}
+
+	private void applyWaterMask()
+	{
+		int xOffset = this.zoomed ? this.xOffset : 0;
+		int yOffset = this.zoomed ? this.yOffset : 0;
+		
+		Graphics2D g = (Graphics2D) image.getGraphics();
+		if(this.zoomed)
+		{
+			g.drawImage(zoomedWaterLayer, null, xOffset, yOffset);	
+		}
+		else
+		{
+			g.drawImage(waterLayer, null, xOffset, yOffset);			
+		}
 	}
 }

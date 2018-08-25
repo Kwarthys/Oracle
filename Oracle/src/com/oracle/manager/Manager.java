@@ -160,8 +160,7 @@ public class Manager {
 		int debugSavedID = -1;
 		String debugSavedName = "";
 		
-		terrainManager.repaintZone(place.lands, dest.getID());		
-		display.repaintPlace(place, src);
+		terrainManager.repaintZone(place.lands, dest.getID());
 		
 		ArrayList<Nation> toRefresh = new ArrayList<>();
 
@@ -195,6 +194,8 @@ public class Manager {
 			i.computeNewPlans();
 		}
 		
+		
+		display.repaintPlace(place, src);		
 	}
 	
 	public Nation findNationByID(int id)

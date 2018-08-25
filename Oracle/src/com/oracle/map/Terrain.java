@@ -8,8 +8,9 @@ import com.oracle.map.utils.ImprovedNoise;
 import com.oracle.model.Zone;
 
 public class Terrain {
-	
+
 	public static final int SEA_CODE = -3;
+	public static final int WATER_CODE = 0;
 	
 	int map2[][], map1[][], width, height;
 	
