@@ -156,41 +156,64 @@ public class Nation
 	
 
 	public void computeNewPlans()
+	{		
+		this.placeWanted = decideWar();
+	}
+	
+	private Place decideWar()
 	{
-		placeWanted = null;
+		Place wanted = null;
+		
+		Nation toAttack = null;
+		int worstScore = 1000;
 
 		for(Nation n : neighbours)
 		{
-			double nationActualScore = n.score * Penalty.penaltyAmount(n.getPenalties().size()) / 100;
-
 			int nationStandings = standings.get(n).getCurrentStanding();
 
 			if(nationStandings < 2 * this.aggressivity - 120)//Wants to attack
 			{
-				for(Place p : this.places)
-				{
-					for(Place v : p.neighbours)
+				double nationActualScore = n.score * Penalty.penaltyAmount(n.getPenalties().size()) / 100;
+				if(nationActualScore < this.score * ( 1 + 0.01 * this.aggressivity)) //Can Attack
+				{					
+					int nationScore = nationStandings * (int)nationActualScore;
+
+					if(toAttack == null || worstScore > nationScore)
 					{
-						if(v.owner.getID() == n.getID())
-						{							
-							if(nationActualScore < this.score * ( 1 + 0.01 * this.aggressivity)) //Can Attack
-							{
-								if(placeWanted == null)
-									placeWanted = v;
-
-								else if(v.landValue > placeWanted.landValue)
-								{
-									placeWanted = v;
-								}
-							}
-
-						}
+						System.out.println("here");
+						toAttack = n;
+						worstScore = nationScore;
 					}
 				}
-				return; //If nation decided to attack another nation, it won't look its other neighbors;
+			}
+		}
+		
+		if(toAttack == null)
+		{
+			return null;
+		}
+
+		System.out.println(this.getQuickDescriptor() + " wants to attack " + toAttack.getQuickDescriptor());
+
+		for(Place p : this.places)
+		{
+			for(Place v : p.neighbours)
+			{
+				if(v.owner.getID() == toAttack.getID())
+				{
+					if(wanted == null)
+					{
+						wanted = v;
+					}
+					else if(v.landValue * (1 + 0.1  * Math.random())> wanted.landValue)
+					{
+						wanted = v;
+					}
+				}
 			}
 		}
 
+		return wanted;
 	}
 
 
