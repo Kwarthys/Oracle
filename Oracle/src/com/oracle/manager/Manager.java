@@ -137,10 +137,9 @@ public class Manager {
 		if(wanted == null)
 		{
 			System.out.println(protagonist.getQuickDescriptor() + " is peacefull (or forced to be).");
-			protagonist.changeScore(1);
+			protagonist.changeScore(protagonist.getPlaces().size() / 100.0);
 			return;
-		}	
-
+		}
 
 		WarEvent w = new WarEvent(wanted, protagonist);
 
@@ -148,11 +147,8 @@ public class Manager {
 		{
 			switchProperty(wanted, protagonist);
 		}
-			
 
 		System.out.println(w.getStory());
-
-
 	}
 	
 	
