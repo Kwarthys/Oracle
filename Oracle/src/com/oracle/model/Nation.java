@@ -172,10 +172,12 @@ public class Nation
 		{
 			int nationStandings = standings.get(n).getCurrentStanding();
 
-			if(nationStandings < 2 * this.aggressivity - 120)//Wants to attack
+			if(nationStandings < 2 * this.aggressivity - 130)//Wants to attack
 			{
-				double nationActualScore = n.score * Penalty.penaltyAmount(n.getPenalties().size()) / 100;
-				if(nationActualScore < this.score * ( 1 + 0.01 * this.aggressivity)) //Can Attack
+				double nationActualScore = n.score * (1 - Penalty.penaltyAmount(n.getPenalties().size()) / 100);
+				double ourActualScore = this.score * (1 - Penalty.penaltyAmount(this.getPenalties().size()) / 100);			
+				
+				if(nationActualScore < ourActualScore * ( 1 + 0.01 * this.aggressivity)) //Can Attack
 				{					
 					int nationScore = nationStandings * (int)nationActualScore;
 
@@ -318,5 +320,11 @@ public class Nation
 		standings.forEach((k, v) -> {
 			System.out.println("about " + k.getQuickDescriptor() + " : " + v.getCurrentStanding() + ".");
 		});
+	}
+
+
+	public void setDeathScore()
+	{
+		this.score = -1;
 	}
 }

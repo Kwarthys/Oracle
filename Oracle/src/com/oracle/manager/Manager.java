@@ -27,6 +27,8 @@ public class Manager {
 	
 	public static int turnCount = 0;
 	
+	private int subTurnCounter = 0;
+	
 	public Manager()
 	{
 		this.terrainManager = new Terrain(1000,1000, Math.random()*10);
@@ -107,9 +109,13 @@ public class Manager {
 	
 	private void playATurn()
 	{
-		System.out.println(turnCount);
+		System.out.println(turnCount + " ." + (subTurnCounter+1)%nations.size() + "/" + nations.size() + ".");
 		drawWarEvent();
-		turnCount++;
+		subTurnCounter++;
+		if(subTurnCounter % (nations.size()) == 0)
+		{
+			turnCount++;
+		}
 	}
 	
 	private void showStandings()
@@ -124,7 +130,7 @@ public class Manager {
 	{
 		Nation protagonist = null;
 		
-		protagonist = nations.get(turnCount % nations.size());
+		protagonist = nations.get(subTurnCounter % nations.size());
 		
 		Place wanted = protagonist.getPlans();
 		
@@ -169,6 +175,7 @@ public class Manager {
 			this.nations.remove(src);
 			debugSavedID = src.getID();
 			debugSavedName = src.name;
+			src.setDeathScore();
 		}
 		else
 		{

@@ -3,7 +3,7 @@ package com.oracle.model;
 public class Standing {
 
 	public static final int ATTACK = -20;
-	public static final int TERRIROTY_WANTED = -10;	
+	public static final int TERRIROTY_WANTED = -2;	
 	
 	private int standing = 0;
 	
@@ -14,7 +14,7 @@ public class Standing {
 	
 	public int getCurrentStanding()
 	{
-		return standing; // will be affected by modifiers
+		return standing;
 	}
 
 	public void refresh()

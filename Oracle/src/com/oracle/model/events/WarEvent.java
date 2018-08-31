@@ -20,8 +20,6 @@ public class WarEvent extends HistoricEvent
 	private boolean attackHasPenalty = false;
 	private boolean defenseHasPenalty = false;
 	
-	private String defenderName;
-	
 	//private String adverb;
 	
 	public WarEvent(Place attacked, Nation attacker)
@@ -30,8 +28,6 @@ public class WarEvent extends HistoricEvent
 		this.attacker = attacker;
 		
 		this.defender = attacked.owner;
-
-		this.defenderName = defender.name;
 		
 		attacker.update();
 		defender.update();
@@ -113,49 +109,35 @@ public class WarEvent extends HistoricEvent
 			sb.append("*");
 		}
 		
-		sb.append(" attacks ");
+		if(success)
+		{
+			sb.append(" wins ");
+		}
+		else
+		{
+			sb.append(" attacks ");
+		}
 		sb.append(attacked.name);
 		sb.append("(");
 		sb.append(String.format("%.2f", attacked.landValue));
 		sb.append(")");
 		
-		sb.append("of Nation ");
-		sb.append(this.defenderName);
-		sb.append("(");
-		
-		if(defender == null)
-		{
-			sb.append("dead");
-		}
-		else
-		{
-			sb.append(String.format("%.1f", defender.getScore()));	
-		}
-		
-		sb.append(")");
+		sb.append("of ");
+		sb.append(defender.getQuickDescriptor());
 		
 		if(defenseHasPenalty)
 		{
 			sb.append("*");
 		}
 		
-		if(success)
+		if(!success)
 		{
-			sb.append(" and");
-			//sb.append(this.adverb);
-			sb.append(" wins. Nation ");
-			sb.append(attacker.name);
-			sb.append(" is now the new master of ");
-			sb.append(attacked.name);
-			sb.append(".");
+			sb.append(" but fails.");
 		}
 		else
 		{
-			sb.append(" and");
-			//sb.append(this.adverb);
-			sb.append(" fails.");
+			sb.append(".");
 		}
-		
 		
 		return sb.toString();
 	}
