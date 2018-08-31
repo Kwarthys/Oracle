@@ -2,6 +2,7 @@ package com.oracle.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import com.oracle.manager.Manager;
 
@@ -180,7 +181,6 @@ public class Nation
 
 					if(toAttack == null || worstScore > nationScore)
 					{
-						System.out.println("here");
 						toAttack = n;
 						worstScore = nationScore;
 					}
@@ -192,8 +192,8 @@ public class Nation
 		{
 			return null;
 		}
-
-		System.out.println(this.getQuickDescriptor() + " wants to attack " + toAttack.getQuickDescriptor());
+		
+		HashMap<Place, Double> places = new HashMap<>();
 
 		for(Place p : this.places)
 		{
@@ -201,15 +201,35 @@ public class Nation
 			{
 				if(v.owner.getID() == toAttack.getID())
 				{
-					if(wanted == null)
+					if(!places.containsKey(v))
 					{
-						wanted = v;
+						places.put(v, 1.0);
 					}
-					else if(v.landValue * (1 + 0.1  * Math.random())> wanted.landValue)
+					else
 					{
-						wanted = v;
+						places.put(v, places.get(v) + 1.0);
 					}
 				}
+			}
+		}
+		
+		double bestScore = 0;
+		
+		for (Map.Entry<Place, Double> entry : places.entrySet())
+		{
+			double landValue = entry.getKey().landValue * (1 + 0.1  * Math.random());
+			
+			double valueByOccurence = landValue * (1 +  (entry.getValue()-1)*(entry.getValue()-1)/4);
+			
+			if(bestScore == 0)
+			{
+				bestScore = valueByOccurence;
+				wanted = entry.getKey();
+			}
+			else if(bestScore < valueByOccurence)
+			{
+				bestScore = valueByOccurence;
+				wanted = entry.getKey();
 			}
 		}
 
